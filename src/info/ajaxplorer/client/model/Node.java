@@ -15,7 +15,7 @@ import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
-@DatabaseTable
+@DatabaseTable(tableName="a")
 public class Node {
 
 	public static int NODE_STATUS_FRESH = 1; 
