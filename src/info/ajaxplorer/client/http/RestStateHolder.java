@@ -112,12 +112,11 @@ public class RestStateHolder {
 	}
 
 	public void setDirectory(Node currentDirectory) {
-		this.directory = currentDirectory;
 		Node oldDirectory = null;
 		if(this.directory != null && this.directory != currentDirectory){
 			oldDirectory = this.directory;
 		}
-		this.repository = currentDirectory;
+		this.directory = currentDirectory;
 		Iterator<StateListener> it = listeners.iterator();
 		while(it.hasNext()){
 			StateListener l = it.next();
