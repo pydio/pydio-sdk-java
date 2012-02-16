@@ -259,13 +259,17 @@ public class AjxpAPI {
 		}
 	}
 	
-	public URI getImageDataUri(String file, boolean getThumb) throws URISyntaxException{
+	public URI getImageDataUri(String file, boolean getThumb, int thumbDimension) throws URISyntaxException{
 		String ret=getGetActionUrl("preview_data_proxy");
 		try{
 			String url = ret+"file="+java.net.URLEncoder.encode(file, "UTF-8");
 			if(getThumb){
 				url = url.concat("&get_thumb=true");
+				if(thumbDimension != -1){
+					url = url.concat("&dimension="+thumbDimension);
+				}
 			}
+			
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
