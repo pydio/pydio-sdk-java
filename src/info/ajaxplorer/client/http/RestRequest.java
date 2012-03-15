@@ -276,7 +276,7 @@ public class RestRequest {
 				return true;
 			}
 			if(doc.getElementsByTagName("message").getLength() > 0){
-				if(doc.getElementsByTagName("message").item(0).getFirstChild().getNodeValue().trim().equals("You are not allowed to access this resource.")){
+				if(doc.getElementsByTagName("message").item(0).getFirstChild().getNodeValue().trim().contains("You are not allowed to access this resource.")){
 					//Log.d("RestRequest Authentication", "REQUIRE_AUTH TAG : TOKEN IS REQUIRED");
 					this.authStep = "RENEW-TOKEN";
 					return true;

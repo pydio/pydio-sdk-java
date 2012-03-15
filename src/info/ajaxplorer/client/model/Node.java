@@ -171,6 +171,12 @@ public class Node {
 		return new String(bytes);
 	}
 
+	public String getPath(boolean skipEncoding) {
+		if(skipEncoding) return path;
+		byte bytes[]=EncodingUtils.getBytes(path,"utf-8");
+		return new String(bytes);
+	}
+
 	public void setPath(String path) {
 		this.path = path;
 	}
@@ -226,6 +232,10 @@ public class Node {
 	
 	public Date getLastModified(){
 		return lastModified;
+	}
+	
+	public void setLastModified(Date d){
+		lastModified = d;
 	}
 	
 	public String toString(){

@@ -1,9 +1,15 @@
 package info.ajaxplorer.client.model;
 
+import info.ajaxplorer.client.util.PassManager;
+
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 
+import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 
@@ -37,7 +43,15 @@ public class Server {
 		this.label = serverNode.getLabel();
 		this.url = serverNode.getPropertyValue("url");
 		this.user = serverNode.getPropertyValue("user");
-		this.password = serverNode.getPropertyValue("password");
+		//this.password = serverNode.getPropertyValue("password");
+		try {
+			this.password = PassManager.decrypt(serverNode.getPropertyValue("password"));
+		} catch (GeneralSecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		if(serverNode.getPropertyValue("trust_ssl") != null){
 			this.trustSSL = Boolean.parseBoolean(serverNode.getPropertyValue("trust_ssl"));
 		}
@@ -47,6 +61,23 @@ public class Server {
 		this.id = Server.slugifyId(user, url);		
 		this.uri = Server.uriFromString(url);
 	}
+
+	public Node createDbNode(Dao<Node, String> nodeDao) throws SQLException{
+		Node n = new Node(Node.NODE_TYPE_SERVER, this.getLabel(), null);
+		nodeDao.create(n);
+		n.properties = nodeDao.getEmptyForeignCollection("properties");
+		n.addProperty("url", this.getUrl());
+		n.addProperty("user", this.getUser());
+		n.addProperty("trust_ssl", Boolean.toString(trustSSL));
+		n.addProperty("legacy_server", Boolean.toString(legacyServer));
+		try {
+			n.addProperty("password", PassManager.encrypt(this.getPassword()));
+		} catch (GeneralSecurityException e) {
+			e.printStackTrace();
+		}
+		this.setServerNode(n);
+		return n;		
+	}
 	
 	public Node createDbNode(RuntimeExceptionDao<Node, Integer> nodeDao){
 		Node n = new Node(Node.NODE_TYPE_SERVER, this.getLabel(), null);
@@ -54,19 +85,50 @@ public class Server {
 		n.properties = nodeDao.getEmptyForeignCollection("properties");
 		n.addProperty("url", this.getUrl());
 		n.addProperty("user", this.getUser());
-		n.addProperty("password", this.getPassword());
 		n.addProperty("trust_ssl", Boolean.toString(trustSSL));
 		n.addProperty("legacy_server", Boolean.toString(legacyServer));
+		try {
+			n.addProperty("password", PassManager.encrypt(this.getPassword()));
+		} catch (GeneralSecurityException e) {
+			e.printStackTrace();
+		}
 		this.setServerNode(n);
 		return n;		
 	}
 	
+	public void updateDbNode(Dao<Node, String> nodeDao, Dao<Property, String> propertyDao) throws SQLException{
+		Node n = this.getServerNode();
+		for(Property p:n.properties){
+			if(p.getName().equals("url")) p.setValue(this.getUrl());
+			else if(p.getName().equals("user")) p.setValue(this.getUser());
+			else if(p.getName().equals("password")){
+				try {
+					p.setValue(PassManager.encrypt(this.getPassword()));
+				} catch (GeneralSecurityException e) {
+					e.printStackTrace();
+				}
+			}
+			else if(p.getName().equals("trust_ssl")) p.setValue(Boolean.toString(trustSSL));
+			else if(p.getName().equals("legacy_server")) p.setValue(Boolean.toString(legacyServer));	
+			propertyDao.update(p);
+		}
+		if(!n.getLabel().equals(this.label)){
+			n.setLabel(this.label);
+		}
+		nodeDao.update(n);
+	}	
 	public void updateDbNode(RuntimeExceptionDao<Node, Integer> nodeDao, RuntimeExceptionDao<Property, Integer> propertyDao){
 		Node n = this.getServerNode();
 		for(Property p:n.properties){
 			if(p.getName().equals("url")) p.setValue(this.getUrl());
 			else if(p.getName().equals("user")) p.setValue(this.getUser());
-			else if(p.getName().equals("password")) p.setValue(this.getPassword());
+			else if(p.getName().equals("password")) {
+				try {
+					p.setValue(PassManager.encrypt(this.getPassword()));
+				} catch (GeneralSecurityException e) {
+					e.printStackTrace();
+				}
+			}
 			else if(p.getName().equals("trust_ssl")) p.setValue(Boolean.toString(trustSSL));
 			else if(p.getName().equals("legacy_server")) p.setValue(Boolean.toString(legacyServer));			
 			propertyDao.update(p);

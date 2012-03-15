@@ -146,11 +146,19 @@ public class AjxpAPI {
 		return returnUriFromString(getLsRepositoryUrl());
 	}
 
+	public URI getRecursiveLsDirectoryUri(Node directory) throws URISyntaxException{
+		return returnUriFromString(getDirectoryUrl(directory, true));
+	}
+
 	public URI getLsDirectoryUri(Node directory) throws URISyntaxException{
 		return returnUriFromString(getDirectoryUrl(directory));
 	}
 
 	private String getDirectoryUrl(Node directory) {
+		return getDirectoryUrl(directory, false);
+	}
+	
+	private String getDirectoryUrl(Node directory, boolean recursive) {
 		if (directory == null)
 			return "";
 
@@ -160,8 +168,13 @@ public class AjxpAPI {
 			path = "/";
 		}
 		try {
-			url = getGetActionUrl("ls") + "options=al&dir="
-					+ java.net.URLEncoder.encode(path, "UTF-8");
+			if(recursive){
+				url = getGetActionUrl("ls") + "options=a&dir="
+						+ java.net.URLEncoder.encode(path, "UTF-8") + "&recursive=true";
+			}else{
+				url = getGetActionUrl("ls") + "options=al&dir="
+						+ java.net.URLEncoder.encode(path, "UTF-8");				
+			}
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
@@ -185,7 +198,7 @@ public class AjxpAPI {
 				"repository_id=" + id);
 	}
 	
-	protected void setServer (Server s) {
+	public void setServer (Server s) {
 		if (s!=null) {
 			this.server_url = s.getUrl();
 			this.content_php = s.isLegacyServer()?"content.php?":"?";
@@ -277,7 +290,17 @@ public class AjxpAPI {
 		}
 	}
 	
-	
+	public URI getStatUri(String path) throws URISyntaxException{
+		String url=getGetActionUrl("stat");
+		try{
+			url = url.concat("file="+java.net.URLEncoder.encode(path, "UTF-8"));
+			return returnUriFromString(url);
+		}catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+		
 	public URI getMkdirUri(String file) throws URISyntaxException{
 		String url=getGetActionUrl("mkdir");
 		try{
