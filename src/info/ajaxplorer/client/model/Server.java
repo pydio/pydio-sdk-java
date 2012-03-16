@@ -25,6 +25,8 @@ public class Server {
 	boolean trustSSL;
 	boolean legacyServer;
 	
+	public boolean passNeedsEncryption = false;
+	
 	public Node getServerNode() {
 		return serverNode;
 	}
@@ -45,7 +47,9 @@ public class Server {
 		this.user = serverNode.getPropertyValue("user");
 		//this.password = serverNode.getPropertyValue("password");
 		try {
-			this.password = PassManager.decrypt(serverNode.getPropertyValue("password"));
+			String p = serverNode.getPropertyValue("password");
+			this.password = PassManager.decrypt(p);
+			if(p.equals(this.password)){passNeedsEncryption = true;}
 		} catch (GeneralSecurityException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -137,6 +141,17 @@ public class Server {
 			n.setLabel(this.label);
 			nodeDao.update(n);
 		}
+	}
+	public void upgradePassword(RuntimeExceptionDao<Property, Integer> propertyDao){
+		for(Property p:this.getServerNode().properties){
+			if(!p.getName().equals("password")) continue;
+			try {
+				p.setValue(PassManager.encrypt(this.getPassword()));
+			} catch (GeneralSecurityException e) {
+				e.printStackTrace();
+			}
+			propertyDao.update(p);
+		}		
 	}
 
 	public Server(String label, String url, String user, String password, boolean trustSSL, boolean legacyServer) throws URISyntaxException{
