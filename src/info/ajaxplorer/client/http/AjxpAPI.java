@@ -337,6 +337,23 @@ public class AjxpAPI {
 		}
 	}
 	
+	public URI getShareLinkUri(Node targetNode, int expiration, String password) throws URISyntaxException{
+		String url=getGetActionUrl("share");
+		try{
+			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(), "UTF-8"));
+			if(expiration != 0){
+				url = url.concat("&expiration=" + expiration);
+			}
+			if(!password.equals("")){
+				url = url.concat("&password=" + password);
+			}
+			return returnUriFromString(url);
+		}catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public URI getMoveUri( Node from, Node to) throws URISyntaxException{
 
 		try{
