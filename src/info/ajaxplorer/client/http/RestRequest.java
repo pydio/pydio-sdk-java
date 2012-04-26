@@ -171,6 +171,9 @@ public class RestRequest {
 			}
 			
 			request.setURI(uri);
+			if(this.httpUser.length()> 0 && this.httpPassword.length()> 0 ){
+				request.addHeader("Ajxp-Force-Login", "true");
+			}
 			response = httpClient.executeInContext(request);
 			if(isAuthenticationRequested(response)){
 				sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_REFRESHING_AUTH);
