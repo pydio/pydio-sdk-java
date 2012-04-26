@@ -215,12 +215,14 @@ public class Node {
 	}
 	
 	public String getPath() {
+		if(path == null) return "";
 		byte bytes[]=EncodingUtils.getBytes(path,"utf-8");
 		return new String(bytes);
 	}
 
 	public String getPath(boolean skipEncoding) {
 		if(skipEncoding) return path;
+		if(path == null) return "";
 		byte bytes[]=EncodingUtils.getBytes(path,"utf-8");
 		return new String(bytes);
 	}
