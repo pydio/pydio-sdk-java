@@ -178,6 +178,13 @@ public class AjxpAPI {
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
+		if(directory.getPropertyValue("pagination:target") != null){
+			try {
+				url = url.concat(java.net.URLEncoder.encode("%23"+directory.getPropertyValue("pagination:target"), "UTF-8"));
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
 		return url;
 	}
 
@@ -242,7 +249,7 @@ public class AjxpAPI {
 	public URI getUploadUri(String targetFolder) throws URISyntaxException{
 		String url=getGetActionUrl("upload");
 		try{
-			url = url.concat("dir="+java.net.URLEncoder.encode(targetFolder, "UTF-8"));
+			url = url.concat("dir="+java.net.URLEncoder.encode(targetFolder, "UTF-8")+"&xhr_uploader=true");
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();

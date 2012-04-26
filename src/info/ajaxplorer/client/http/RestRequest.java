@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -26,10 +27,13 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MIME;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EncodingUtils;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -116,7 +120,7 @@ public class RestRequest {
 		public String getFilename(){
 			return customFileName;
 		}
-		
+				
 	}
 
 	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters, File file, String fileName) throws Exception {
@@ -132,12 +136,14 @@ public class RestRequest {
 			if(postParameters != null || file != null){
 				request = new HttpPost();
 				if(file != null){
-					
 					FileBody bin;
 					if(fileName != null) bin = new CustomFileBody(file, fileName);
 					else bin = new FileBody(file);
 					MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
 					reqEntity.addPart("userfile_0", bin);
+					if(fileName != null && !EncodingUtils.getAsciiString(EncodingUtils.getBytes(fileName, "US-ASCII")).equals(fileName)){
+						reqEntity.addPart("urlencoded_filename", new StringBody(java.net.URLEncoder.encode(fileName, "UTF-8")));
+					}
 					if(postParameters != null){						
 						Iterator<Map.Entry<String, String>> it = postParameters.entrySet().iterator();
 						while(it.hasNext()){

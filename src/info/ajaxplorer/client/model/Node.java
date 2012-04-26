@@ -1,7 +1,9 @@
 package info.ajaxplorer.client.model;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.apache.http.util.EncodingUtils;
@@ -139,6 +141,52 @@ public class Node {
 	public void addProperty(String name, String value){
 		Property p = new Property(name, value, this);
 		properties.add(p);
+	}
+	
+	public void setProperty(String name, String value, RuntimeExceptionDao<Property, Integer>dao){
+		if(properties == null) return;
+		boolean found = false;
+		try{
+			CloseableIterator<Property> it = properties.closeableIterator();
+			while(it.hasNext()){
+				Property current = it.next();
+				if(current.getName().equals(name)) {
+					current.setValue(value);
+					dao.update(current);
+					found = true;
+					break;
+				}
+			}
+			it.close();
+		}catch(SQLException e){
+			
+		}
+		if(!found){
+			this.addProperty(name, value, dao);
+		}		
+	}
+	
+	public int deleteProperty(String name, RuntimeExceptionDao<Property, Integer> propDao){
+		if(properties == null) return 0;
+		int count = 0;
+		try{
+			ArrayList<Property> removed = new ArrayList<Property>();
+			CloseableIterator<Property> it = properties.closeableIterator();
+			while(it.hasNext()){
+				Property current = it.next();
+				if(current.getName().equals(name)) {
+					propDao.delete(current);
+					removed.add(current);
+					count++;
+				}
+			}
+			it.close();
+			Iterator<Property> i = removed.iterator();
+			while(i.hasNext()) properties.remove(i.next());
+		}catch(SQLException e){
+			e.printStackTrace();
+		}		
+		return count;
 	}
 	
 	public void recursiveDeleteChildren(RuntimeExceptionDao<Node, Integer> dao){
