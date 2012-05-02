@@ -11,6 +11,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
 import com.j256.ormlite.dao.CloseableIterator;
+import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.ForeignCollection;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 import com.j256.ormlite.field.DatabaseField;
@@ -165,7 +166,28 @@ public class Node {
 			this.addProperty(name, value, dao);
 		}		
 	}
-	
+	public void setProperty(String name, String value, Dao<Property, Integer>dao){
+		if(properties == null) return;
+		boolean found = false;
+		try{
+			CloseableIterator<Property> it = properties.closeableIterator();
+			while(it.hasNext()){
+				Property current = it.next();
+				if(current.getName().equals(name)) {
+					current.setValue(value);
+					dao.update(current);
+					found = true;
+					break;
+				}
+			}
+			it.close();
+		}catch(SQLException e){
+			
+		}
+		if(!found){
+			this.addProperty(name, value, dao);
+		}		
+	}
 	public int deleteProperty(String name, RuntimeExceptionDao<Property, Integer> propDao){
 		if(properties == null) return 0;
 		int count = 0;
@@ -199,6 +221,17 @@ public class Node {
 	public void addProperty(String name, String value, RuntimeExceptionDao<Property, Integer>dao){
 		Property p = new Property(name, value, this);
 		dao.create(p);
+		properties.add(p);
+	}
+	
+	public void addProperty(String name, String value, Dao<Property, Integer>dao){
+		Property p = new Property(name, value, this);
+		try {
+			dao.create(p);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		properties.add(p);
 	}
 	
