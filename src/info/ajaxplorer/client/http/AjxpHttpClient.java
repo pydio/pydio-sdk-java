@@ -73,7 +73,7 @@ public class AjxpHttpClient extends DefaultHttpClient {
 	}
 
 	public void clearCookies() {
-		this.getCookieStore().clear();
+		if(cookieStore != null) cookieStore.clear();
 	}
 
 	public HttpResponse executeInContext(HttpRequestBase request)
@@ -92,7 +92,7 @@ public class AjxpHttpClient extends DefaultHttpClient {
 		}
 		return cookies;
 	}
-
+	
 	public void destroy() {
 		// TODO Auto-generated method stub
 		
