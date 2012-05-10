@@ -32,6 +32,7 @@ import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EncodingUtils;
 import org.json.JSONObject;
@@ -63,6 +64,14 @@ public class RestRequest {
 		this.handler = null;
 	}
 
+	public void setTimeout(int timeoutMillis){
+		HttpConnectionParams.setConnectionTimeout(httpClient.getParams(), timeoutMillis);
+	}
+	
+	public int getTimeout(){
+		return HttpConnectionParams.getConnectionTimeout(httpClient.getParams());
+	}
+	
 	protected AjxpHttpClient httpClient;
 
 	public RestRequest() {		

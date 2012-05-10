@@ -158,6 +158,10 @@ public class AjxpAPI {
 		return getDirectoryUrl(directory, false);
 	}
 	
+	public URI getPingUri() throws URISyntaxException{
+		return returnUriFromString(getGetActionUrl("ping"));
+	}
+	
 	private String getDirectoryUrl(Node directory, boolean recursive) {
 		if (directory == null)
 			return "";
