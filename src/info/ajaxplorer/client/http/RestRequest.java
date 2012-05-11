@@ -1,11 +1,17 @@
 package info.ajaxplorer.client.http;
 
+import info.ajaxplorer.client.http.CountingMultipartRequestEntity.ProgressListener;
 import info.ajaxplorer.client.model.Server;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.security.MessageDigest;
@@ -110,29 +116,16 @@ public class RestRequest {
 	}
 	
 	private HttpResponse issueRequest(URI uri) throws Exception{
-		return this.issueRequest(uri, null, null, null);
+		return this.issueRequest(uri, null, null, null, null);
 	}
 	
 	@SuppressWarnings("unused")
 	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters) throws Exception{
-		return this.issueRequest(uri, postParameters, null, null);
-	}
-	
-	private class CustomFileBody extends FileBody{
-
-		private String customFileName;
-		public CustomFileBody(File file, String fileName) {
-			super(file);
-			customFileName = fileName;
-		}
-		@Override
-		public String getFilename(){
-			return customFileName;
-		}
-				
+		return this.issueRequest(uri, postParameters, null, null, null);
 	}
 
-	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters, File file, String fileName) throws Exception {
+
+	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters, File file, String fileName, AjxpFileBody fileBody) throws Exception {
 		URI originalUri = new URI(uri.toString());
 		if(RestStateHolder.getInstance().getSECURE_TOKEN() != null){
 			uri = new URI(uri.toString().concat("&secure_token=" + RestStateHolder.getInstance().getSECURE_TOKEN()));
@@ -144,14 +137,35 @@ public class RestRequest {
 
 			if(postParameters != null || file != null){
 				request = new HttpPost();
-				if(file != null){
-					FileBody bin;
-					if(fileName != null) bin = new CustomFileBody(file, fileName);
-					else bin = new FileBody(file);
+				if(file != null){					
+					
+					if(fileBody == null){
+						if(fileName == null) fileName = file.getName(); 
+						fileBody = new AjxpFileBody(file, fileName);
+						ProgressListener origPL = this.uploadListener;
+						Map<String,String> caps = RestStateHolder.getInstance().getServer().getRemoteCapacities(this);
+						this.uploadListener = origPL;
+						int maxUpload = 0;
+						if(caps!=null && caps.containsKey(Server.capacity_UPLOAD_LIMIT)) maxUpload = new Integer(caps.get(Server.capacity_UPLOAD_LIMIT));
+						if(maxUpload > 0 && maxUpload < file.length()){
+							fileBody.chunkIntoPieces(maxUpload);
+							if(uploadListener != null){
+								uploadListener.partTransferred(fileBody.getCurrentIndex(), fileBody.getTotalChunks());
+							}
+						}
+					}else{
+						if(uploadListener != null){
+							uploadListener.partTransferred(fileBody.getCurrentIndex(), fileBody.getTotalChunks());
+						}
+					}
 					MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
-					reqEntity.addPart("userfile_0", bin);
+					reqEntity.addPart("userfile_0", fileBody);
+					
 					if(fileName != null && !EncodingUtils.getAsciiString(EncodingUtils.getBytes(fileName, "US-ASCII")).equals(fileName)){
 						reqEntity.addPart("urlencoded_filename", new StringBody(java.net.URLEncoder.encode(fileName, "UTF-8")));
+					}
+					if(fileBody != null && !fileBody.getFilename().equals(fileBody.getRootFilename())){
+						reqEntity.addPart("appendto_urlencoded_part", new StringBody(java.net.URLEncoder.encode(fileBody.getRootFilename(), "UTF-8")));
 					}
 					if(postParameters != null){						
 						Iterator<Map.Entry<String, String>> it = postParameters.entrySet().iterator();
@@ -191,9 +205,13 @@ public class RestRequest {
 				if(loginStateChanged){
 					// RELOAD
 					loginStateChanged = false;
-					sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_LOADING_DATA);					
-					return this.issueRequest(originalUri, postParameters, file, fileName);
+					sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_LOADING_DATA);
+					if(fileBody != null) fileBody.resetChunkIndex();
+					return this.issueRequest(originalUri, postParameters, file, fileName, fileBody);
 				}
+			}else if(fileBody != null && fileBody.isChunked() && !fileBody.allChunksUploaded()){
+				this.discardResponse(response);
+				this.issueRequest(originalUri, postParameters, file, fileName, fileBody);
 			}
 		} catch (ClientProtocolException e) {
 			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
@@ -283,7 +301,9 @@ public class RestRequest {
 				docEntity.toLogger();
 			}
 			
-			if(doc.getElementsByTagName("ajxp_registry_part").getLength() > 0 && doc.getElementsByTagName("repositories").getLength() == 0){
+			if(doc.getElementsByTagName("ajxp_registry_part").getLength() > 0
+					&& doc.getDocumentElement().getAttribute("xPath").equals("user/repositories")
+					&& doc.getElementsByTagName("repositories").getLength() == 0){
 				//Log.d("RestRequest Authentication", "EMPTY REGISTRY : AUTH IS REQUIRED");
 				this.authStep = "LOG-USER";
 				return true;
@@ -318,7 +338,7 @@ public class RestRequest {
 	public String getStringContent(URI uri, Map<String, String> parameters, File file, String fileName) throws Exception {
 		BufferedReader in = null;
 		try {
-			HttpResponse response = this.issueRequest(uri, parameters, file, fileName);
+			HttpResponse response = this.issueRequest(uri, parameters, file, fileName, null);
 			if(response == null){
 				throw new Exception("Empty Http response");
 			}
@@ -351,7 +371,7 @@ public class RestRequest {
 	}
 	
 	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params) throws Exception{
-		HttpResponse response = this.issueRequest(uri, params, null, null);
+		HttpResponse response = this.issueRequest(uri, params, null, null, null);
 		StatusLine status = response.getStatusLine();
 		if(status.getStatusCode() != 200){
 			throw new Exception("Status code :" + status.getStatusCode());

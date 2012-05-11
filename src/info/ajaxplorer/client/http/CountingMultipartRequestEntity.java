@@ -26,6 +26,7 @@ public class CountingMultipartRequestEntity implements HttpEntity {
 
     public static interface ProgressListener {
         void transferred(long num);
+        void partTransferred(int part, int total);
     }
     
 

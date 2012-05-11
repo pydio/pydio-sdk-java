@@ -1,5 +1,7 @@
 package info.ajaxplorer.client.model;
 
+import info.ajaxplorer.client.http.AjxpAPI;
+import info.ajaxplorer.client.http.RestRequest;
 import info.ajaxplorer.client.util.PassManager;
 
 import java.io.IOException;
@@ -8,6 +10,16 @@ import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
@@ -24,8 +36,10 @@ public class Server {
 	Node serverNode;	
 	boolean trustSSL;
 	boolean legacyServer;
+	Map<String, String> remoteCapacities;
 	
 	public boolean passNeedsEncryption = false;
+	public static String capacity_UPLOAD_LIMIT = "//property[@name='UPLOAD_MAX_SIZE']";
 	
 	public Node getServerNode() {
 		return serverNode;
@@ -163,6 +177,25 @@ public class Server {
 		this.trustSSL = trustSSL;
 		this.legacyServer = legacyServer;
 		this.uri = uriFromString(url);
+	}
+	
+	public Map<String,String> getRemoteCapacities(RestRequest rest){
+		if(this.remoteCapacities != null) return this.remoteCapacities;
+		// Load XML Registry and get values
+		remoteCapacities = new HashMap<String, String>();
+		try {
+			Document doc = rest.getDocumentContent(AjxpAPI.getInstance().getXmlPluginsRegistryUri());
+			XPathFactory factory = XPathFactory.newInstance();
+			XPath xpath = factory.newXPath();
+			XPathExpression expr = xpath.compile(capacity_UPLOAD_LIMIT);
+			org.w3c.dom.Node result = (org.w3c.dom.Node)expr.evaluate(doc, XPathConstants.NODE);
+			remoteCapacities.put(capacity_UPLOAD_LIMIT, result.getFirstChild().getNodeValue());
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+		return this.remoteCapacities;
 	}
 
 	private static String slugifyId(String user, String url) throws URISyntaxException{

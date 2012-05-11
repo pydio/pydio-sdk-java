@@ -136,6 +136,10 @@ public class AjxpAPI {
 	public URI getGetXmlRegistryUri() throws URISyntaxException{
 		return AjxpAPI.returnUriFromString(this.getGetActionUrl("get_xml_registry", false).concat("xPath=user/repositories"));
 	}
+	
+	public URI getXmlPluginsRegistryUri() throws URISyntaxException{
+		return AjxpAPI.returnUriFromString(this.getGetActionUrl("get_xml_registry", false).concat("xPath=plugins"));
+	}
 
 	private String getLsRepositoryUrl() throws URISyntaxException{
 		String ret = getGetActionUrl("ls");
