@@ -147,6 +147,7 @@ public class RestRequest {
 						this.uploadListener = origPL;
 						int maxUpload = 0;
 						if(caps!=null && caps.containsKey(Server.capacity_UPLOAD_LIMIT)) maxUpload = new Integer(caps.get(Server.capacity_UPLOAD_LIMIT));
+						maxUpload = Math.min(maxUpload, 60000000);
 						if(maxUpload > 0 && maxUpload < file.length()){
 							fileBody.chunkIntoPieces(maxUpload);
 							if(uploadListener != null){
