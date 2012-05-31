@@ -352,6 +352,18 @@ public class AjxpAPI {
 		}
 	}
 	
+	public URI getRenameUri(Node targetNode, Node destNode) throws URISyntaxException{
+		String url=getGetActionUrl("rename");
+		try{
+			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(), "UTF-8"));
+			url = url+"&dest="+java.net.URLEncoder.encode(destNode.getPath(), "UTF-8");
+			return returnUriFromString(url);
+		}catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public URI getShareLinkUri(Node targetNode, int expiration, String password) throws URISyntaxException{
 		String url=getGetActionUrl("share");
 		try{
@@ -374,13 +386,53 @@ public class AjxpAPI {
 		try{
 			String ret=getGetActionUrl("move");
 			ret += "file="+java.net.URLEncoder.encode(from.getPath(), "UTF-8");
-			ret += "&dir="+java.net.URLEncoder.encode(from.getParent().getPath(), "UTF-8");
-			ret += "&dest_node="+java.net.URLEncoder.encode(to.getPath(), "UTF-8");
 			ret += "&dest="+java.net.URLEncoder.encode(to.getPath(), "UTF-8");
-			ret += "&dest_repository_id="+RestStateHolder.getInstance().getRepository().getPropertyValue("repository_id");
 			return returnUriFromString(ret);
 		}catch(UnsupportedEncodingException e){
 			return null;
 		}
 	}
+	
+	public URI getFilehashDeltaUri(Node node)throws URISyntaxException {
+		
+		String url=getGetActionUrl("filehasher_delta");
+		try{
+			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(), "UTF-8"));
+			return returnUriFromString(url);
+		}catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			return null;
+		}
+		
+		
+	}
+	
+	public URI getFilehashSignatureUri(Node node)throws URISyntaxException {
+		
+		String url=getGetActionUrl("filehasher_signature");
+		try{
+			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(), "UTF-8"));
+			return returnUriFromString(url);
+		}catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			return null;
+		}
+		
+		
+	}
+	
+	public URI getFilehashPatchUri(Node node)throws URISyntaxException {
+		
+		String url=getGetActionUrl("filehasher_patch");
+		try{
+			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(), "UTF-8"));
+			return returnUriFromString(url);
+		}catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			return null;
+		}
+		
+		
+	}
+	
 }

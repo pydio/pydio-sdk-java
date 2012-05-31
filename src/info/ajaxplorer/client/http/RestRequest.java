@@ -370,14 +370,17 @@ public class RestRequest {
 			}
 		}
 	}
-	
-	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params) throws Exception{
-		HttpResponse response = this.issueRequest(uri, params, null, null, null);
+
+	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params, File uploadFile) throws Exception{
+		HttpResponse response = this.issueRequest(uri, params, uploadFile, null, null);
 		StatusLine status = response.getStatusLine();
 		if(status.getStatusCode() != 200){
 			throw new Exception("Status code :" + status.getStatusCode());
 		}
 		return response.getEntity();
+	}
+	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params) throws Exception{
+		return this.getNotConsumedResponseEntity(uri, params, null);
 	}
 
 	public Document getDocumentContent(URI uri) throws Exception {
