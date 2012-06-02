@@ -1,19 +1,43 @@
 package info.ajaxplorer.client.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 
 public class RdiffProcessor {
 
-	private String rdiffPath = "G:\\PROGRAMS\\rdiff\\rdiff.exe";
+	private String rdiffPath;
+	private boolean testEnabled = false;
 	
-	public static boolean rdiffEnabled(){
-		return true;
+	public boolean rdiffEnabled(){
+		return testEnabled;
 	}
 	
-	public RdiffProcessor(){
+	public RdiffProcessor(String path){
+		rdiffPath = path;
+		try{
+			testEnabled = testCommand();
+		}catch(Exception e){
+			testEnabled = false;
+		}
+	}
+	
+	protected boolean testCommand() throws IOException, InterruptedException{
 		
+		String line;
+		StringBuilder sb = new StringBuilder();
+		Process p = Runtime.getRuntime().exec(rdiffPath);
+		BufferedReader bri = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+		while ((line = bri.readLine()) != null) {
+			sb.append(line);
+		}
+		bri.close();
+		p.waitFor();
+		String s = sb.toString();
+		return (s.indexOf("signature") > -1 && s.indexOf("patch") > -1 && s.indexOf("delta") > -1);
 	}
+	
 	
 	public void signature(File source, File signature){
 		try {
