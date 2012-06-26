@@ -39,6 +39,7 @@ public class RdiffProcessor {
 		bri.close();
 		p.waitFor();
 		String s = sb.toString();
+		p.destroy();
 		return (s.indexOf("signature") > -1 && s.indexOf("patch") > -1 && s.indexOf("delta") > -1);
 	}
 	
@@ -61,6 +62,7 @@ public class RdiffProcessor {
 			}
 			bri.close();			
 			int exitValue = p.waitFor();
+			p.destroy();
 			if(exitValue != 0) throw new Exception(sb.toString());			//System.out.println("Process exitValue: " + exitValue);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -86,6 +88,7 @@ public class RdiffProcessor {
 			}
 			bri.close();			
 			int exitValue = p.waitFor();
+			p.destroy();
 			if(exitValue != 0) throw new Exception(sb.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -112,6 +115,7 @@ public class RdiffProcessor {
 			}
 			bri.close();			
 			int exitValue = p.waitFor();
+			p.destroy();
 			if(exitValue != 0) throw new Exception(sb.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
