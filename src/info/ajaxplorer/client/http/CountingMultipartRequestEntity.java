@@ -25,8 +25,8 @@ public class CountingMultipartRequestEntity implements HttpEntity {
     }
 
     public static interface ProgressListener {
-        void transferred(long num);
-        void partTransferred(int part, int total);
+        void transferred(long num) throws IOException;
+        void partTransferred(int part, int total) throws IOException;
     }
     
 
