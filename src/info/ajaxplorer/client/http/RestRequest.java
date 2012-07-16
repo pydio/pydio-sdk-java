@@ -79,10 +79,11 @@ public class RestRequest {
 	}
 	
 	protected AjxpHttpClient httpClient;
+	protected RestStateHolder.ServerStateListener internalListener;
 
 	public RestRequest() {		
 		RestStateHolder state = RestStateHolder.getInstance();
-		state.registerStateListener(new RestStateHolder.ServerStateListener() {			
+		internalListener = new RestStateHolder.ServerStateListener() {			
 			public void onServerChange(Server newServer, Server oldServer) {
 				initWithServer(newServer);
 				if(oldServer != null && AjxpHttpClient.cookieStore != null){
@@ -93,8 +94,13 @@ public class RestRequest {
 					}
 				}
 			}
-		}) ;		
+		};
+		state.registerStateListener(internalListener) ;		
 		this.initWithServer(state.getServer());
+	}
+	
+	public void release(){
+		RestStateHolder.getInstance().unRegisterStateListener(internalListener);
 	}
 	
 	private void initWithServer(Server server){

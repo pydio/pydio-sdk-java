@@ -245,7 +245,7 @@ public class AjxpAPI {
 	public URI getDeleteUri(String path) throws URISyntaxException{
 		String url=getGetActionUrl("delete");
 		try{
-			url = url.concat("dir="+java.net.URLEncoder.encode(RestStateHolder.getInstance().getDirectory().getPath(), "UTF-8"));
+			url = url.concat("dir="+java.net.URLEncoder.encode(RestStateHolder.getInstance().getDirectory().getPath(true), "UTF-8"));
 			url = url.concat("&file="+java.net.URLEncoder.encode(path, "UTF-8"));
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
@@ -319,7 +319,7 @@ public class AjxpAPI {
 	public URI getMkdirUri(String file) throws URISyntaxException{
 		String url=getGetActionUrl("mkdir");
 		try{
-			url = url.concat("dir="+java.net.URLEncoder.encode(RestStateHolder.getInstance().getDirectory().getPath(), "UTF-8"));
+			url = url.concat("dir="+java.net.URLEncoder.encode(RestStateHolder.getInstance().getDirectory().getPath(true), "UTF-8"));
 			url = url+"&dirname="+java.net.URLEncoder.encode(file, "UTF-8");
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
@@ -331,7 +331,7 @@ public class AjxpAPI {
 	public URI getMkfileUri(String file) throws URISyntaxException{
 		String url=getGetActionUrl("mkfile");
 		try{
-			url = url.concat("dir="+java.net.URLEncoder.encode(RestStateHolder.getInstance().getDirectory().getPath(), "UTF-8"));
+			url = url.concat("dir="+java.net.URLEncoder.encode(RestStateHolder.getInstance().getDirectory().getPath(true), "UTF-8"));
 			url = url+"&filename="+java.net.URLEncoder.encode(file, "UTF-8");
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
@@ -343,7 +343,7 @@ public class AjxpAPI {
 	public URI getRenameUri(Node targetNode, String newName) throws URISyntaxException{
 		String url=getGetActionUrl("rename");
 		try{
-			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(), "UTF-8"));
+			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(true), "UTF-8"));
 			url = url+"&filename_new="+java.net.URLEncoder.encode(newName, "UTF-8");
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
@@ -355,8 +355,8 @@ public class AjxpAPI {
 	public URI getRenameUri(Node targetNode, Node destNode) throws URISyntaxException{
 		String url=getGetActionUrl("rename");
 		try{
-			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(), "UTF-8"));
-			url = url+"&dest="+java.net.URLEncoder.encode(destNode.getPath(), "UTF-8");
+			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(true), "UTF-8"));
+			url = url+"&dest="+java.net.URLEncoder.encode(destNode.getPath(true), "UTF-8");
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
@@ -367,7 +367,7 @@ public class AjxpAPI {
 	public URI getShareLinkUri(Node targetNode, int expiration, String password) throws URISyntaxException{
 		String url=getGetActionUrl("share");
 		try{
-			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(), "UTF-8"));
+			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(true), "UTF-8"));
 			if(expiration != 0){
 				url = url.concat("&expiration=" + expiration);
 			}
@@ -385,8 +385,8 @@ public class AjxpAPI {
 
 		try{
 			String ret=getGetActionUrl("move");
-			ret += "file="+java.net.URLEncoder.encode(from.getPath(), "UTF-8");
-			ret += "&dest="+java.net.URLEncoder.encode(to.getPath(), "UTF-8");
+			ret += "file="+java.net.URLEncoder.encode(from.getPath(true), "UTF-8");
+			ret += "&dest="+java.net.URLEncoder.encode(to.getPath(true), "UTF-8");
 			return returnUriFromString(ret);
 		}catch(UnsupportedEncodingException e){
 			return null;
@@ -397,7 +397,7 @@ public class AjxpAPI {
 		
 		String url=getGetActionUrl("filehasher_delta");
 		try{
-			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(), "UTF-8"));
+			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(true), "UTF-8"));
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
@@ -411,7 +411,7 @@ public class AjxpAPI {
 		
 		String url=getGetActionUrl("filehasher_signature");
 		try{
-			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(), "UTF-8"));
+			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(true), "UTF-8"));
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
@@ -425,7 +425,7 @@ public class AjxpAPI {
 		
 		String url=getGetActionUrl("filehasher_patch");
 		try{
-			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(), "UTF-8"));
+			url = url.concat("file="+java.net.URLEncoder.encode(node.getPath(true), "UTF-8"));
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
