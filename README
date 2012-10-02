@@ -1,2 +1,7 @@
 Java Client of the AjaXplorer project. 
 Used in the Android app and in the synchro client.
+
+The following libraries are required in order to build the project
+Apache Httpcomponents
+Json-RPC
+Ormlite (core)
