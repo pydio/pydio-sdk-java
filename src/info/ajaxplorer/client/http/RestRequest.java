@@ -158,7 +158,7 @@ public class RestRequest {
 			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
 			RestStateHolder.getInstance().getServer().setUrl(uri_server);
 
-			RestStateHolder.getInstance().getServer().setid(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
+			RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
 			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());
 				
 		}
@@ -437,7 +437,7 @@ public class RestRequest {
 			
 			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
 			RestStateHolder.getInstance().getServer().setUrl(uri_server);
-			RestStateHolder.getInstance().getServer().setid(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
+			RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
 			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());	
 		}
 
