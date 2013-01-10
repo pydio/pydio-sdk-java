@@ -33,20 +33,56 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.BasicHttpEntity;
 import org.w3c.dom.Document;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 public class XMLDocEntity extends BasicHttpEntity {
 	
 	private Document doc;
+	private SAXException currentE;
 
 	public XMLDocEntity(HttpEntity notConsumedEntity) throws ParserConfigurationException, IOException, SAXException
 	{
+		ErrorHandler myErrorHandler = new ErrorHandler()
+		{
+		    public void fatalError(SAXParseException exception)
+		    throws SAXException
+		    {
+		        System.err.println("fatalError: " + exception);
+		    }
+		    
+		    public void error(SAXParseException exception)
+		    throws SAXException
+		    {
+		        System.err.println("error: " + exception);
+		    }
+
+		    public void warning(SAXParseException exception)
+		    throws SAXException
+		    {
+		        System.err.println("warning: " + exception);
+		    }
+
+		};
+
+		
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();			
 		DocumentBuilder db = dbf.newDocumentBuilder();
-		doc = db.parse(notConsumedEntity.getContent());		
+		db.setErrorHandler(myErrorHandler);
+		try{
+			doc = db.parse(notConsumedEntity.getContent());
+		}catch(SAXException e){
+			this.currentE = e;
+		}catch(IOException e){
+			e.printStackTrace();
+		}
 	}
 	
-	public Document getDoc() {
+	public Document getDoc() throws SAXException {
+		if(this.currentE != null) {
+			throw this.currentE;
+		}
 		return doc;
 	}
 

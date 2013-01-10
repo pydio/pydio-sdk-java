@@ -7,5 +7,6 @@
 	<classpathentry kind="lib" path="G:/DEV/JARS/httpcomponents-client-4.1.2/lib/httpmime-4.1.2.jar"/>
 	<classpathentry kind="lib" path="G:/DEV/JARS/json-rpc-1.0.jar"/>
 	<classpathentry kind="lib" path="G:/DEV/JARS/ormlite-core-4.31.jar"/>
+	<classpathentry kind="lib" path="G:/DEV/JARS/java_websocket.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
