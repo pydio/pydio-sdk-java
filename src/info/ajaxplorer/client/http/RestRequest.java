@@ -44,7 +44,6 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.BasicHttpEntity;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
@@ -54,7 +53,6 @@ import org.apache.http.util.EncodingUtils;
 import org.json.JSONObject;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
 
 public class RestRequest {
 
@@ -162,11 +160,11 @@ public class RestRequest {
 						ProgressListener origPL = this.uploadListener;
 						Map<String,String> caps = RestStateHolder.getInstance().getServer().getRemoteCapacities(this);
 						this.uploadListener = origPL;
-						long maxUpload = 0;
-						if(caps!=null && caps.containsKey(Server.capacity_UPLOAD_LIMIT)) maxUpload = new Long(caps.get(Server.capacity_UPLOAD_LIMIT));
-						maxUpload = Math.min(maxUpload, 60*1024*1024);
+						int maxUpload = 0;
+						if(caps!=null && caps.containsKey(Server.capacity_UPLOAD_LIMIT)) maxUpload = new Integer(caps.get(Server.capacity_UPLOAD_LIMIT));
+						maxUpload = Math.min(maxUpload, 60000000);
 						if(maxUpload > 0 && maxUpload < file.length()){
-							fileBody.chunkIntoPieces((int)maxUpload);
+							fileBody.chunkIntoPieces(maxUpload);
 							if(uploadListener != null){
 								uploadListener.partTransferred(fileBody.getCurrentIndex(), fileBody.getTotalChunks());
 							}
@@ -232,13 +230,14 @@ public class RestRequest {
 				this.issueRequest(originalUri, postParameters, file, fileName, fileBody);
 			}
 		} catch (ClientProtocolException e) {
-			error(e);
+			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
+			e.printStackTrace();
 		} catch (IOException e) {
-			error(e);
+			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
+			e.printStackTrace();
 		} catch (AuthenticationException e){
-			error(e);
-		} catch (SAXException e){
-			error(e);
+			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
+			throw e;
 		} catch (Exception e) {
 			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
 			e.printStackTrace();
@@ -296,7 +295,7 @@ public class RestRequest {
 		}			
 	}
 	
-	private boolean isAuthenticationRequested(HttpResponse response) throws Exception {
+	private boolean isAuthenticationRequested(HttpResponse response) {
 		
 		Header[] heads = response.getHeaders("Content-type");
 		boolean xml = false;
@@ -312,8 +311,8 @@ public class RestRequest {
 				((XMLDocEntity)ent).toLogger();
 			}else{
 				XMLDocEntity docEntity = new XMLDocEntity(ent);
-				doc = docEntity.getDoc();
 				ent.consumeContent();// Make sure to clear resources
+				doc = docEntity.getDoc();
 				response.setEntity(docEntity);
 				docEntity.toLogger();
 			}
@@ -325,6 +324,11 @@ public class RestRequest {
 				this.authStep = "LOG-USER";
 				return true;
 			}
+			if(doc.getElementsByTagName("require_auth").getLength() > 0){
+				//Log.d("RestRequest Authentication", "REQUIRE_AUTH TAG : AUTH IS REQUIRED");
+				this.authStep = "LOG-USER";
+				return true;
+			}
 			if(doc.getElementsByTagName("message").getLength() > 0){
 				if(doc.getElementsByTagName("message").item(0).getFirstChild().getNodeValue().trim().contains("You are not allowed to access this resource.")){
 					//Log.d("RestRequest Authentication", "REQUIRE_AUTH TAG : TOKEN IS REQUIRED");
@@ -332,20 +336,9 @@ public class RestRequest {
 					return true;
 				}
 			}
-			if(doc.getElementsByTagName("require_auth").getLength() > 0){
-				//Log.d("RestRequest Authentication", "REQUIRE_AUTH TAG : AUTH IS REQUIRED");
-				if(doc.getElementsByTagName("message").getLength() > 0) {
-					throw new Exception(doc.getElementsByTagName("message").item(0).getFirstChild().getNodeValue().trim());
-				}
-				this.authStep = "LOG-USER";
-				return true;
-			}
 		}catch (Exception e) {
-			error(e);
-			/*
 			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
 			e.printStackTrace();
-			*/			
 		}
 		return false;
 	}	
@@ -366,29 +359,21 @@ public class RestRequest {
 				throw new Exception("Empty Http response");
 			}
 
-			HttpEntity e = response.getEntity();
-			if(e.getClass() == XMLDocEntity.class){
-				
-				Document doc = ((XMLDocEntity)e).getDoc();				
-				return doc.toString();
-				
-			}else{
-				in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
+			in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
-				StringBuffer sb = new StringBuffer("");
-				String line = "";
-				String NL = System.getProperty("line.separator");
+			StringBuffer sb = new StringBuffer("");
+			String line = "";
+			String NL = System.getProperty("line.separator");
 
-				while ((line = in.readLine()) != null) {
-					sb.append(line + NL);
-				}
-
-				in.close();
-
-				String page = sb.toString();
-
-				return page;				
+			while ((line = in.readLine()) != null) {
+				sb.append(line + NL);
 			}
+
+			in.close();
+
+			String page = sb.toString();
+
+			return page;
 
 		} finally {
 			if (in != null) {
@@ -403,7 +388,6 @@ public class RestRequest {
 
 	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params, File uploadFile) throws Exception{
 		HttpResponse response = this.issueRequest(uri, params, uploadFile, null, null);
-		
 		StatusLine status = response.getStatusLine();
 		if(status.getStatusCode() != 200){
 			throw new Exception("Status code :" + status.getStatusCode());
@@ -416,26 +400,20 @@ public class RestRequest {
 
 	public Document getDocumentContent(URI uri) throws Exception {
 
-		try{
-			HttpResponse response = this.issueRequest(uri);
-			
-			HttpEntity ent = response.getEntity();
-			
-			Document doc;
-			sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_PARSING_RESPONSE);
-			if(ent.getClass() == XMLDocEntity.class){
-				doc = ((XMLDocEntity)ent).getDoc();
-			}else{
-					XMLDocEntity docEntity = new XMLDocEntity(ent);
-					ent.consumeContent();
-					doc = docEntity.getDoc();
-					response.setEntity(docEntity);				
-			}			
-			return doc;
-		}catch(SAXException sE){
-			System.err.println("Error while parsing " + uri.toURL() + " : " + sE.getMessage());
-			throw sE;
-		}
+		HttpResponse response = this.issueRequest(uri);
+		
+		HttpEntity ent = response.getEntity();
+		Document doc;
+		sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_PARSING_RESPONSE);
+		if(ent.getClass() == XMLDocEntity.class){
+			doc = ((XMLDocEntity)ent).getDoc();
+		}else{
+			XMLDocEntity docEntity = new XMLDocEntity(ent);
+			ent.consumeContent();
+			doc = docEntity.getDoc();
+			response.setEntity(docEntity);
+		}			
+		return doc;
 	}
 
 	public JSONObject getJSonContent(URI uri) throws Exception {
@@ -590,14 +568,6 @@ public class RestRequest {
 	        e.printStackTrace();
 	    }
 	    return "";
-	}
-
-	protected void error(Exception e) throws Exception{
-		if(handler != null) handler.sendMessage(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
-		else {
-			e.printStackTrace();
-			throw e;
-		}
 	}
 	
 	protected void sendMessageToHandler(int messageType, Object obj){

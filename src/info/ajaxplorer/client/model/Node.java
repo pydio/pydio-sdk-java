@@ -162,7 +162,7 @@ public class Node {
 		properties.add(p);
 	}
 	
-	public synchronized void setProperty(String name, String value, RuntimeExceptionDao<Property, Integer>dao){
+	public void setProperty(String name, String value, RuntimeExceptionDao<Property, Integer>dao){
 		if(properties == null) return;
 		boolean found = false;
 		try{
@@ -177,21 +177,21 @@ public class Node {
 				}
 			}
 			it.close();
-			if(!found){
-				this.addProperty(name, value, dao);
-			}		
 		}catch(SQLException e){
 			
 		}
+		if(!found){
+			this.addProperty(name, value, dao);
+		}		
 	}
-	public synchronized void setProperty(String name, String value, Dao<Property, Integer>dao) throws SQLException{
+	public void setProperty(String name, String value, Dao<Property, Integer>dao){
 		if(properties == null) return;
 		boolean found = false;
 		try{
 			CloseableIterator<Property> it = properties.closeableIterator();
 			while(it.hasNext()){
 				Property current = it.next();
-				if(current.getName().equalsIgnoreCase(name)) {
+				if(current.getName().equals(name)) {
 					current.setValue(value);
 					dao.update(current);
 					found = true;
@@ -199,13 +199,12 @@ public class Node {
 				}
 			}
 			it.close();
-			if(!found){
-				this.addProperty(name, value, dao);
-			}		
 		}catch(SQLException e){
-			//e.printStackTrace();
-			throw e;
+			
 		}
+		if(!found){
+			this.addProperty(name, value, dao);
+		}		
 	}
 	public int deleteProperty(String name, RuntimeExceptionDao<Property, Integer> propDao){
 		if(properties == null) return 0;
@@ -237,13 +236,13 @@ public class Node {
 		dao.delete(children);
 	}
 	
-	public synchronized void addProperty(String name, String value, RuntimeExceptionDao<Property, Integer>dao){
+	public void addProperty(String name, String value, RuntimeExceptionDao<Property, Integer>dao){
 		Property p = new Property(name, value, this);
 		dao.create(p);
 		properties.add(p);
 	}
 	
-	public synchronized void addProperty(String name, String value, Dao<Property, Integer>dao){
+	public void addProperty(String name, String value, Dao<Property, Integer>dao){
 		Property p = new Property(name, value, this);
 		try {
 			dao.create(p);

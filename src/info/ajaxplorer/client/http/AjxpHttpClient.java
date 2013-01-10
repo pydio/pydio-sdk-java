@@ -94,10 +94,6 @@ public class AjxpHttpClient extends DefaultHttpClient {
 		if(cookieStore != null) cookieStore.clear();
 	}
 
-	public static void clearCookiesStatic() {
-		if(AjxpHttpClient.cookieStore != null) AjxpHttpClient.cookieStore.clear();
-	}
-
 	public HttpResponse executeInContext(HttpRequestBase request)
 			throws ClientProtocolException, IOException {
 		return execute(request, localContext);
