@@ -26,9 +26,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -100,9 +102,12 @@ public class RestRequest {
 				if(oldServer != null && AjxpHttpClient.cookieStore != null){
 					String currentHost = oldServer.getHost();
 					String currentUser = oldServer.getUser();
-					if(newServer.getHost().equals(currentHost) && !newServer.getUser().equals(currentUser)){
+					if(!RestStateHolder.getInstance().getServer().getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION))
+					{
+					    if(newServer.getHost().equals(currentHost) && !newServer.getUser().equals(currentUser)){
 						AjxpHttpClient.cookieStore.clear();
 					}
+						}
 				}
 			}
 		};
@@ -141,9 +146,25 @@ public class RestRequest {
 		return this.issueRequest(uri, postParameters, null, null, null);
 	}
 
-
+	
 	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters, File file, String fileName, AjxpFileBody fileBody) throws Exception {
 		URI originalUri = new URI(uri.toString());
+
+	    if(EndPointResolverApi.checkResolutionRequired(uri))
+		{
+			String uri_server ="";
+			EndPointResolverApi endPointResolverApi = new EndPointResolverApi();
+   			uri_server = endPointResolverApi.resolveServer(RestStateHolder.getInstance().getServer(), this,uri);
+         
+			originalUri = new URI(uri_server);
+			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
+			RestStateHolder.getInstance().getServer().setUrl(uri_server);
+
+			RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
+			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());
+				
+		}
+		
 		if(RestStateHolder.getInstance().getSECURE_TOKEN() != null){
 			uri = new URI(uri.toString().concat("&secure_token=" + RestStateHolder.getInstance().getSECURE_TOKEN()));
 		}
@@ -240,7 +261,7 @@ public class RestRequest {
 		} catch (SAXException e){
 			error(e);
 		} catch (Exception e) {
-			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
+		    sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
 			e.printStackTrace();
 		}finally{
 			uploadListener = null;
@@ -274,7 +295,11 @@ public class RestRequest {
 					password = RestRequest.md5(password) + seed;
 					password = RestRequest.md5(password);
 				}
-				Document doc = this.getDocumentContent(API.makeLoginUri(user, password, seed));
+					Map<String, String> loginPass = new HashMap<String, String>();
+					loginPass.put("userid", user);
+					loginPass.put("password", password);
+					loginPass.put("login_seed", seed);
+				Document doc = this.getDocumentContent(API.makeLoginUri(),loginPass);
 				if(doc.getElementsByTagName("logging_result").getLength() > 0){
 					String result = doc.getElementsByTagName("logging_result").item(0).getAttributes().getNamedItem("value").getNodeValue();
 					if(result.equals("1")){
@@ -436,6 +461,33 @@ public class RestRequest {
 			System.err.println("Error while parsing " + uri.toURL() + " : " + sE.getMessage());
 			throw sE;
 		}
+	}
+	
+	public Document getDocumentContent(URI uri, Map<String, String> postParams) throws Exception {
+		if(EndPointResolverApi.checkResolutionRequired(uri))
+		{
+			EndPointResolverApi endPointResolverApi = new EndPointResolverApi();
+			String uri_server = endPointResolverApi.resolveServer(RestStateHolder.getInstance().getServer(), this,uri);
+			
+			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
+			RestStateHolder.getInstance().getServer().setUrl(uri_server);
+			RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
+			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());	
+		}
+
+		HttpResponse response = this.issueRequest(uri, postParams);		
+		HttpEntity ent = response.getEntity();
+		Document doc;
+		sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_PARSING_RESPONSE);
+		if(ent.getClass() == XMLDocEntity.class){
+			doc = ((XMLDocEntity)ent).getDoc();
+		}else{
+			XMLDocEntity docEntity = new XMLDocEntity(ent);
+			ent.consumeContent();
+			doc = docEntity.getDoc();
+			response.setEntity(docEntity);
+		}			
+		return doc;
 	}
 
 	public JSONObject getJSonContent(URI uri) throws Exception {

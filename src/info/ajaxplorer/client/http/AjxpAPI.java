@@ -36,7 +36,7 @@ public class AjxpAPI {
 
 	String SECURE_TOKEN;
 	String server_url;
-	String content_php = "?";
+	String content_php = "index.php?";
 	Document xml_registry;
 
 	private AjxpAPI() {
@@ -147,8 +147,8 @@ public class AjxpAPI {
 		return AjxpAPI.returnUriFromString(this.getGetActionUrl("get_seed", false));
 	}
 	
-	public URI makeLoginUri(String userid, String password, String seed) throws URISyntaxException{
-		String base = this.getGetActionUrl("login", false).concat("userid="+userid+"&password="+password+"&login_seed="+seed);
+	public URI makeLoginUri() throws URISyntaxException{
+		String base = this.getGetActionUrl("login", false);
 		return AjxpAPI.returnUriFromString(base);
 	}
 	
@@ -235,7 +235,7 @@ public class AjxpAPI {
 	public void setServer (Server s) {
 		if (s!=null) {
 			this.server_url = s.getUrl();
-			this.content_php = s.isLegacyServer()?"content.php?":"?";
+			this.content_php = s.isLegacyServer()?"content.php?":"index.php?";
 		}
 	}
 	
@@ -412,6 +412,30 @@ public class AjxpAPI {
 		}
 	}
 	
+	public URI getCopyUri( Node from, Node to) throws URISyntaxException{
+
+		try{
+			String ret=getGetActionUrl("copy");
+			ret += "file="+java.net.URLEncoder.encode(from.getPath(true), "UTF-8");
+			ret += "&dest="+java.net.URLEncoder.encode(to.getPath(true), "UTF-8");
+			return returnUriFromString(ret);
+		}catch(UnsupportedEncodingException e){
+			return null;
+		}
+	}
+	public URI getSearchUri( String name) throws URISyntaxException{
+
+		try{
+			String ret=getGetActionUrl("search");
+			ret += "query="+java.net.URLEncoder.encode(name, "UTF-8");
+			return returnUriFromString(ret);
+		}catch(UnsupportedEncodingException e){
+			return null;
+		}
+	}
+	
+		
+	
 	public URI getFilehashDeltaUri(Node node)throws URISyntaxException {
 		
 		String url=getGetActionUrl("filehasher_delta");
@@ -425,6 +449,9 @@ public class AjxpAPI {
 		
 		
 	}
+	
+
+	
 	
 	public URI getFilehashSignatureUri(Node node)throws URISyntaxException {
 		

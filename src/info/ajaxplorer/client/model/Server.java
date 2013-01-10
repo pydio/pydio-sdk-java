@@ -44,7 +44,7 @@ import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 public class Server {
 
-	String id;
+    String id;
 	String label;
 	String url;
 	String user;
@@ -57,7 +57,6 @@ public class Server {
 	
 	public boolean passNeedsEncryption = false;
 	public static String capacity_UPLOAD_LIMIT = "//property[@name='UPLOAD_MAX_SIZE']";
-	
 	public Node getServerNode() {
 		return serverNode;
 	}
@@ -93,7 +92,13 @@ public class Server {
 		if(serverNode.getPropertyValue("legacy_server") != null){
 			this.legacyServer = Boolean.parseBoolean(serverNode.getPropertyValue("legacy_server"));
 		}
-		this.id = Server.slugifyId(user, url);		
+		//In the case we have url equal RequestResolution we donc show this url
+		if(url.equals("RequestResolution/")){
+			this.id=user;
+		}
+		else{
+			this.id = Server.slugifyId(user, url);
+		}			
 		this.uri = Server.uriFromString(url);
 	}
 
@@ -130,7 +135,7 @@ public class Server {
 		this.setServerNode(n);
 		return n;		
 	}
-	
+
 	public void updateDbNode(Dao<Node, String> nodeDao, Dao<Property, String> propertyDao) throws SQLException{
 		Node n = this.getServerNode();
 		for(Property p:n.properties){
@@ -215,7 +220,7 @@ public class Server {
 		return this.remoteCapacities;
 	}
 
-	private static String slugifyId(String user, String url) throws URISyntaxException{
+	public static String slugifyId(String user, String url) throws URISyntaxException{
 		// check if URL is parsable :
 		URI uri = uriFromString(url);
 		if (uri == null)
@@ -297,7 +302,9 @@ public class Server {
 	public String getID() {
 		return id;
 	}
-
+	public void setId(String newid){
+		this.id = newid;
+	}
 	public String getLabel() {
 		return label;
 	}

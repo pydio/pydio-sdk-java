@@ -56,8 +56,11 @@ public class RestStateHolder {
 	}
 	public interface DirectoryStateListener extends StateListener{
 		public void onDirectoryChange(Node newDirectory, Node oldDirectory);
+		
 	}
-
+	public interface ServerStateResolutionListener extends StateListener{
+		public void onServerChangeResolution(Server server);
+	}
 	public void registerStateListener(StateListener listener){
 		this.listeners.add(listener);
 	}
@@ -81,7 +84,7 @@ public class RestStateHolder {
 	public void setSECURE_TOKEN(String token) {
 		SECURE_TOKEN = token;
 	}	
-
+   
 	public void setServer(Server currentServer) {
 			
 		Server oldServer = null;
@@ -97,6 +100,18 @@ public class RestStateHolder {
 			}
 		}
 	}
+
+	public void notifyServerChanged(Server server) {
+		
+		Iterator<StateListener> it = listeners.iterator();
+		while(it.hasNext()){
+			StateListener l = it.next();
+			if(l instanceof ServerStateResolutionListener){
+				((ServerStateResolutionListener)l).onServerChangeResolution(server);
+			}
+		}
+	}
+
 
 	public boolean isRepositorySet(){
 		return repository != null;
