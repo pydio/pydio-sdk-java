@@ -64,6 +64,7 @@ public class RestRequest {
 	String authStep = "";
 	Boolean loginStateChanged = false;
 	MessageListener handler;
+	public boolean throwAuthExceptions = false;
 	
 	public static String STATUS_REFRESHING_AUTH 	= "refreshing_auth";
 	public static String STATUS_LOADING_DATA 		= "loading_data";
@@ -255,7 +256,8 @@ public class RestRequest {
 		} catch (IOException e) {
 			error(e);
 		} catch (AuthenticationException e){
-			error(e);
+			if(this.throwAuthExceptions) throw e;
+			else error(e);
 		} catch (SAXException e){
 			error(e);
 		} catch (Exception e) {
