@@ -3,26 +3,13 @@ package info.ajaxplorer.client.http;
 import info.ajaxplorer.client.model.Node;
 import info.ajaxplorer.client.model.Server;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.Random;
 import java.util.UUID;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.omg.CORBA.Request;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
-
-
-import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 
 public class EndPointResolverApi {
@@ -30,10 +17,6 @@ public class EndPointResolverApi {
 	String auth;
 	public static String STATUS_ERROR;
 	public static String STATUS_ERROR_LABEL;
-	private static String apikey="z0rgrg48ZEFdf424ge";
-	private static String apisecret="gso13sfDRPOKE44255XX";
-
-	
 	
 	public static String SERVER_URL_RESOLUTION 	= "RequestResolution";	
 	

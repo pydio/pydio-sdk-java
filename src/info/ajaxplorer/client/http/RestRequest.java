@@ -140,7 +140,6 @@ public class RestRequest {
 		return this.issueRequest(uri, null, null, null, null);
 	}
 	
-	@SuppressWarnings("unused")
 	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters) throws Exception{
 		return this.issueRequest(uri, postParameters, null, null, null);
 	}

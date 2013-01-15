@@ -104,6 +104,7 @@ public class XMLDocEntity extends BasicHttpEntity {
 		if(true){
 			return;
 		}
+		/*
 		try{
 			Transformer transformer = TransformerFactory.newInstance().newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
@@ -117,6 +118,7 @@ public class XMLDocEntity extends BasicHttpEntity {
 			System.out.println(xmlString);
 		}catch(Exception e){
 		}
+		*/
 	}
 	
 }
