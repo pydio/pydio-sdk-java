@@ -1,11 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="info/ajaxplorer/client/http/AjxpWebSocket.java" kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
-	<classpathentry kind="lib" path="G:/DEV/JARS/httpcomponents-client-4.1.2/lib/httpclient-4.1.2.jar"/>
-	<classpathentry kind="lib" path="G:/DEV/JARS/httpcomponents-client-4.1.2/lib/httpcore-4.1.2.jar"/>
-	<classpathentry kind="lib" path="G:/DEV/JARS/httpcomponents-client-4.1.2/lib/httpmime-4.1.2.jar"/>
-	<classpathentry kind="lib" path="G:/DEV/JARS/json-rpc-1.0.jar"/>
-	<classpathentry kind="lib" path="G:/DEV/JARS/ormlite-core-4.31.jar"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry excluding="info/ajaxplorer/client/http/AjxpWebSocket.java" including="**/*.java" kind="src" output="target/classes" path="src">
+		<attributes>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="target/classes"/>
 </classpath>
