@@ -29,6 +29,7 @@ public class EndPointResolverApi {
 	public static String STATUS_ERROR_WRONG_ARG="Endpoint_wrong_method_arguments";
 	public static String STATUS_ERROR_INT="Endpoint_internal_error";
 	public static String STATUS_ERROR_NOT_FIND="Endpoint_cannot_find_specified_endpoint";
+	public static String END_POINT_ERROR="End_Point_Error";
 	
 	
      public EndPointResolverApi(){
@@ -84,7 +85,7 @@ public class EndPointResolverApi {
 									nameError=nameError.concat("Error");
 					        		 STATUS_ERROR = errorHandler(Integer.parseInt(valueErrorid));
 						        	 STATUS_ERROR_LABEL = valueError;
-						        	 throw new Exception("End_Point_Error");
+						        	 throw new Exception(END_POINT_ERROR);
 									 
 								}
 								 
@@ -108,7 +109,7 @@ public class EndPointResolverApi {
 					if(Integer.parseInt(id_status)!=-1)
 					{
 						STATUS_ERROR = errorHandler(Integer.parseInt(id_status));
-						throw new Exception("End_Point_Error");
+						throw new Exception(END_POINT_ERROR);
 						
 					}
 					else{
@@ -121,7 +122,7 @@ public class EndPointResolverApi {
 						if(!name_status.equals("#text")){
 							STATUS_ERROR = "-1";
 				        	 STATUS_ERROR_LABEL = value_status;
-				        	 throw new Exception("End_Point_Error");
+				        	 throw new Exception(END_POINT_ERROR);
 						}
 					}
 						
@@ -148,14 +149,14 @@ public class EndPointResolverApi {
 				String value_endpoint = map2.item(i).getTextContent();
 				if(name_endpoint.equals("expire"))
 				{
-					if(value_endpoint.equals("a day"))
+					if(value_endpoint.equals("day"))
 					{
 						server.setProperty(name_endpoint, "date:["+String.valueOf(System .currentTimeMillis() + 86400000)+"]");
 					}
-					else if (value_endpoint.equals("a week")){
+					else if (value_endpoint.equals("week")){
 						server.setProperty(name_endpoint, "date:["+String.valueOf(System .currentTimeMillis() + 604800000)+"]");			
 					}
-					else if (value_endpoint.equals("a month"))
+					else if (value_endpoint.equals("month"))
 					{
 						server.setProperty(name_endpoint, "date:["+String.valueOf(System .currentTimeMillis() + 2678400000L)+"]");
 					}
@@ -199,7 +200,7 @@ public class EndPointResolverApi {
                                 if(name_url.equals("host")&&value_url.equals(""))
                                 {
             						STATUS_ERROR = errorHandler(32);
-            						throw new Exception("End_Point_Error");
+            						throw new Exception(END_POINT_ERROR);
                                 }
                                 else
                                 {
@@ -242,11 +243,8 @@ public class EndPointResolverApi {
 
     public URI getEndPointInfoURL(Node serverNode,String endPointAlias) throws URISyntaxException{
        	String api = serverNode.getPropertyValue("server_url");
-    	String url = api.concat("server.xml?auth="+constructAuth(serverNode)).
-				concat("&method="+serverNode.getPropertyValue("parameter_name1")+"&"+serverNode.getPropertyValue("parameter_name2")+"="+endPointAlias);
-    	
-    	//String url = api.concat("?auth="+constructAuth(serverNode)).
-			//concat("&method="+serverNode.getPropertyValue("parameter_name1")+"&"+serverNode.getPropertyValue("parameter_name2")+"="+endPointAlias);
+    	String url = api.concat("?auth="+constructAuth(serverNode)).
+			concat("&method="+serverNode.getPropertyValue("parameter_name1")+"&"+serverNode.getPropertyValue("parameter_name2")+"="+endPointAlias);
     	URI uri = new URI(url);
 			return uri;		
 		}
@@ -261,23 +259,13 @@ public class EndPointResolverApi {
 
 
     	Document regDoc = null;
-
     	regDoc = restRequest.getDocumentContent(uri);
-
     	if(uri_server.toString().contains("get_xml_registry")){
-    		  
-    		     initFromXmlNode(server.getServerNode(),regDoc); 
-
+    		initFromXmlNode(server.getServerNode(),regDoc); 
     	}
-
-         if(server.getServerNode().getStatus() != Node.NODE_STATUS_ERROR)
-         {
-    			uriServer = contructURL(server.getServerNode());
+         if(server.getServerNode().getStatus() != Node.NODE_STATUS_ERROR){
+   			uriServer = contructURL(server.getServerNode());
          }
-         else {
-        	 
-         }
-
     	return uriServer;
 
     }

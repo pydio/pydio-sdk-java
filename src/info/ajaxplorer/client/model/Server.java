@@ -211,7 +211,7 @@ public class Server {
 			XPath xpath = factory.newXPath();
 			XPathExpression expr = xpath.compile(capacity_UPLOAD_LIMIT);
 			org.w3c.dom.Node result = (org.w3c.dom.Node)expr.evaluate(doc, XPathConstants.NODE);
-			remoteCapacities.put(capacity_UPLOAD_LIMIT, result.getFirstChild().getNodeValue());
+			remoteCapacities.put(capacity_UPLOAD_LIMIT, result.getFirstChild().getNodeValue().replace("\"", ""));
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		} catch (Exception e) {

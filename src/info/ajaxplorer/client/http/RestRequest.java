@@ -65,6 +65,7 @@ public class RestRequest {
 	Boolean loginStateChanged = false;
 	MessageListener handler;
 	public boolean throwAuthExceptions = false;
+	public boolean throwIOExceptions = false;
 	
 	public static String STATUS_REFRESHING_AUTH 	= "refreshing_auth";
 	public static String STATUS_LOADING_DATA 		= "loading_data";
@@ -73,6 +74,7 @@ public class RestRequest {
 	public static String AUTH_ERROR_NOSERVER		= "nocurrent_server";
 	public static String AUTH_ERROR_LOCKEDOUT		= "locked_out";
 	public static String AUTH_ERROR_LOGIN_FAILED	= "login_failed";
+	public static String IO_CONNECTION_ERROR    	= "Error_Connection";
 	
 	public void setHandler(MessageListener handler) {
 		this.handler = handler;
@@ -158,7 +160,7 @@ public class RestRequest {
 			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
 			RestStateHolder.getInstance().getServer().setUrl(uri_server);
 
-			RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
+			//RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
 			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());
 				
 		}
@@ -253,7 +255,7 @@ public class RestRequest {
 		} catch (ClientProtocolException e) {
 			error(e);
 		} catch (IOException e) {
-			error(e);
+			errorConnection(e);
 		} catch (AuthenticationException e){
 			if(this.throwAuthExceptions) throw e;
 			else error(e);
@@ -437,29 +439,10 @@ public class RestRequest {
 	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params) throws Exception{
 		return this.getNotConsumedResponseEntity(uri, params, null);
 	}
-
-	public Document getDocumentContent(URI uri) throws Exception {
-
-		try{
-			HttpResponse response = this.issueRequest(uri);
-			
-			HttpEntity ent = response.getEntity();
-			
-			Document doc;
-			sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_PARSING_RESPONSE);
-			if(ent.getClass() == XMLDocEntity.class){
-				doc = ((XMLDocEntity)ent).getDoc();
-			}else{
-					XMLDocEntity docEntity = new XMLDocEntity(ent);
-					ent.consumeContent();
-					doc = docEntity.getDoc();
-					response.setEntity(docEntity);				
-			}			
-			return doc;
-		}catch(SAXException sE){
-			System.err.println("Error while parsing " + uri.toURL() + " : " + sE.getMessage());
-			throw sE;
-		}
+	public Document getDocumentContent(URI uri) throws Exception{
+		
+		return getDocumentContent(uri, null);
+		
 	}
 	
 	public Document getDocumentContent(URI uri, Map<String, String> postParams) throws Exception {
@@ -470,7 +453,7 @@ public class RestRequest {
 			
 			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
 			RestStateHolder.getInstance().getServer().setUrl(uri_server);
-			RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
+			//RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
 			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());	
 		}
 
@@ -488,7 +471,7 @@ public class RestRequest {
 		}			
 		return doc;
 	}
-
+	
 	public JSONObject getJSonContent(URI uri) throws Exception {
 		return new JSONObject(this.getStringContent(uri));
 	}
@@ -650,10 +633,21 @@ public class RestRequest {
 			throw e;
 		}
 	}
-	
+	protected void errorConnection(Exception e) throws Exception{
+		if(this.throwIOExceptions) throw new Exception(IO_CONNECTION_ERROR);
+		else if(handler != null)
+			{
+			  handler.sendMessage(MessageListener.MESSAGE_WHAT_ERROR, IO_CONNECTION_ERROR);
+			}
+		else {
+			e.printStackTrace();
+			throw e;
+		}
+	}
 	protected void sendMessageToHandler(int messageType, Object obj){
 		if(handler == null) return;
 		handler.sendMessage(messageType, obj);
 	}
 	
+
 }
