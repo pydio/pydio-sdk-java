@@ -400,6 +400,27 @@ public class AjxpAPI {
 		}
 	}
 	
+	public URI getShareLinkUri(Node targetNode, int expiration, String password, int downloadlimit) throws URISyntaxException{
+		String url=getGetActionUrl("share");
+		try{
+			url = url.concat("file="+java.net.URLEncoder.encode(targetNode.getPath(true), "UTF-8"));
+			if(expiration != 0){
+				url = url.concat("&expiration=" + expiration);
+			}
+			if(!password.equals("")){
+				url = url.concat("&password=" + password);
+			}
+			
+			if(downloadlimit != 0){
+				url = url.concat("&downloadlimit=" + downloadlimit);
+			}			
+			return returnUriFromString(url);
+		}catch(UnsupportedEncodingException e){
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
 	public URI getMoveUri( Node from, Node to) throws URISyntaxException{
 
 		try{
