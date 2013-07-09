@@ -242,7 +242,10 @@ public class Server {
 
 	
 	public String getHost() {
-		return uri.getHost();
+		if(uri != null) {
+			return uri.getHost();
+		}
+		return "";
 	}
 
 	public String getProtocol() {

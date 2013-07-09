@@ -103,12 +103,14 @@ public class RestRequest {
 				if(oldServer != null && AjxpHttpClient.cookieStore != null){
 					String currentHost = oldServer.getHost();
 					String currentUser = oldServer.getUser();
-					if(!RestStateHolder.getInstance().getServer().getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION))
+					Server serv =  RestStateHolder.getInstance().getServer();
+					
+					if(serv != null && serv.getUri() != null && serv.getUri().toString() != null && !serv.getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION))
 					{
-					    if(newServer.getHost().equals(currentHost) && !newServer.getUser().equals(currentUser)){
-						AjxpHttpClient.cookieStore.clear();
+					    if(newServer != null && newServer.getHost().equals(currentHost) && !newServer.getUser().equals(currentUser)){
+					    	AjxpHttpClient.cookieStore.clear();
+					    }
 					}
-						}
 				}
 			}
 		};
