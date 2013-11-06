@@ -251,7 +251,6 @@ public class EndPointResolverApi {
     
     public String resolveServer(Server server, RestRequest restRequest, URI uri_server) throws Exception
     {
-
     	String uriServer=null;
     	URI uri = null;
 
@@ -260,14 +259,13 @@ public class EndPointResolverApi {
 
     	Document regDoc = null;
     	regDoc = restRequest.getDocumentContent(uri);
-    	if(uri_server.toString().contains("get_xml_registry")){
+    	//if(uri_server.toString().contains("get_xml_registry")){
     		initFromXmlNode(server.getServerNode(),regDoc); 
-    	}
+    	//}
          if(server.getServerNode().getStatus() != Node.NODE_STATUS_ERROR){
    			uriServer = contructURL(server.getServerNode());
          }
     	return uriServer;
-
     }
   
     public static String errorHandler(int idError){
