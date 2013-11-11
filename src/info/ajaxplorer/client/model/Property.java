@@ -18,11 +18,13 @@
  */
 package info.ajaxplorer.client.model;
 
+import java.io.Serializable;
+
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName="b")
-public class Property {
+public class Property implements Serializable {
 
 	@DatabaseField(generatedId=true)
 	int id;

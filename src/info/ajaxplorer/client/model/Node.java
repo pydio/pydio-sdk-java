@@ -18,6 +18,7 @@
  */
 package info.ajaxplorer.client.model;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -37,7 +38,7 @@ import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName="a")
-public class Node {
+public class Node implements Serializable {
 
 	public static int NODE_STATUS_FRESH = 1; 
 	public static int NODE_STATUS_LOADING = 2;

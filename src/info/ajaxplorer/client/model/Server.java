@@ -23,6 +23,7 @@ import info.ajaxplorer.client.http.RestRequest;
 import info.ajaxplorer.client.util.PassManager;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
@@ -42,7 +43,7 @@ import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
 
 
-public class Server {
+public class Server implements Serializable {
 
     String id;
 	String label;
