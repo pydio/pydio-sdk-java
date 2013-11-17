@@ -34,18 +34,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.AuthenticationException;
+
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
-import org.apache.http.auth.AuthenticationException;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.StringBody;
@@ -64,10 +64,10 @@ public class RestRequest {
 	String authStep = "";
 	Boolean loginStateChanged = false;
 	MessageListener handler;
-	
+
 	public boolean throwAuthExceptions = false;
 	public boolean throwIOExceptions = false;
-	
+
 	public static String STATUS_REFRESHING_AUTH 	= "refreshing_auth";
 	public static String STATUS_LOADING_DATA 		= "loading_data";
 	public static String STATUS_PARSING_RESPONSE	= "parsing_response";
@@ -76,15 +76,15 @@ public class RestRequest {
 	public static String AUTH_ERROR_LOCKEDOUT		= "locked_out";
 	public static String AUTH_ERROR_LOGIN_FAILED	= "login_failed";
 	public static String IO_CONNECTION_ERROR    	= "Error_Connection";
-	
+
 	public long getMaxUploadSize() {
 		double maxUpload = 60 * 1024 * 1024;
-		Map<String,String> caps = RestStateHolder.getInstance().getServer().getRemoteCapacities(this);		
+		Map<String, String> caps = RestStateHolder.getInstance().getServer().getRemoteCapacities(this);
 		if(caps!=null && caps.containsKey(Server.capacity_UPLOAD_LIMIT)) {
-			
+
 			try{
 				double doubl = new Double( caps.get(Server.capacity_UPLOAD_LIMIT));
-				maxUpload = (long) doubl;											
+				maxUpload = (long) doubl;
 			}catch (NumberFormatException e) {}
 		}
 		maxUpload = Math.min(maxUpload, 60*1024*1024);
@@ -93,7 +93,7 @@ public class RestRequest {
 	public void setHandler(MessageListener handler) {
 		this.handler = handler;
 	}
-	
+
 	public void clearHandler() {
 		this.handler = null;
 	}
@@ -101,39 +101,39 @@ public class RestRequest {
 	public void setTimeout(int timeoutMillis){
 		HttpConnectionParams.setConnectionTimeout(httpClient.getParams(), timeoutMillis);
 	}
-	
+
 	public int getTimeout(){
 		return HttpConnectionParams.getConnectionTimeout(httpClient.getParams());
 	}
-	
+
 	protected AjxpHttpClient httpClient;
 	protected RestStateHolder.ServerStateListener internalListener;
 
-	public RestRequest() {		
+	public RestRequest() {
 		RestStateHolder state = RestStateHolder.getInstance();
-		internalListener = new RestStateHolder.ServerStateListener() {		
+		internalListener = new RestStateHolder.ServerStateListener() {
 			public void onServerChange(Server newServer, Server oldServer) {
 				initWithServer(newServer);
 				if(oldServer != null && AjxpHttpClient.cookieStore != null){
 					String currentHost = oldServer.getHost();
 					String currentUser = oldServer.getUser();
-					
+
 					Server serv =  RestStateHolder.getInstance().getServer();
-					
+
 					if(serv != null ){
 						if(serv.getUri() != null && serv.getUri().toString() != null && !serv.getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION)) {
 						    if(newServer != null && newServer.getHost().equals(currentHost) && !newServer.getUser().equals(currentUser)){
-						    	AjxpHttpClient.cookieStore.clear();						    	
+								AjxpHttpClient.cookieStore.clear();
 						    }
 						    return;
 						}
-						
+
 						String oldAlias = oldServer.getServerNode().getPropertyValue("Resolution_Alias");
 						String newAlias = newServer.getServerNode().getPropertyValue("Resolution_Alias");
-						
+
 						if(newAlias == null) newAlias = "new";
 						if(oldAlias == null) oldAlias = "old";
-						
+
 						if(serv.getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION) && !newAlias.equals(oldAlias)) {
 							AjxpHttpClient.cookieStore.clear();
 						}
@@ -141,14 +141,14 @@ public class RestRequest {
 				}
 			}
 		};
-		state.registerStateListener(internalListener) ;		
+		state.registerStateListener(internalListener);
 		this.initWithServer(state.getServer());
 	}
-	
+
 	public void release(){
 		RestStateHolder.getInstance().unRegisterStateListener(internalListener);
 	}
-	
+
 	private void initWithServer(Server server){
 		boolean trustSSL  = (server != null && server.shouldTrustSSL());
 		if(httpClient != null){
@@ -159,23 +159,29 @@ public class RestRequest {
 			setHttpUser(server.getUser());
 			setHttpPassword(server.getPassword());
 			refreshCredentials();
-		}		
+		}
 	}
 
 	private CountingMultipartRequestEntity.ProgressListener uploadListener;
 	public void setUploadProgressListener(CountingMultipartRequestEntity.ProgressListener uploadList){
 		this.uploadListener = uploadList;
 	}
-	
+
 	private HttpResponse issueRequest(URI uri) throws Exception{
 		return this.issueRequest(uri, null, null, null, null);
 	}
-	
+
 	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters) throws Exception{
 		return this.issueRequest(uri, postParameters, null, null, null);
 	}
-	
-	private HttpResponse issueRequest(URI uri, Map<String,String> postParameters, File file, String fileName, AjxpFileBody fileBody) throws Exception {
+
+	private HttpResponse issueRequest(URI uri, Map<String, String> postParameters, File file, String fileName, AjxpFileBody fileBody)
+			throws Exception {
+		return this.issueRequest(uri, postParameters, file, fileName, fileBody, false);
+	}
+
+	private HttpResponse issueRequest(URI uri, Map<String, String> postParameters, File file, String fileName, AjxpFileBody fileBody,
+			boolean skipAuth) throws Exception {
 		URI originalUri = new URI(uri.toString());
 
 	    if(EndPointResolverApi.checkResolutionRequired(uri))
@@ -184,8 +190,8 @@ public class RestRequest {
 			String uri_server ="";
 			Server server = RestStateHolder.getInstance().getServer();
 			String resolverName = server.getServerNode().getPropertyValue("resolver_class");
-			
-			if(resolverName != null && !resolverName.equals("")) {				
+
+			if (resolverName != null && !resolverName.equals("")) {
 				Class<?> classe = null;
 				try {
 					classe = Class.forName(resolverName);
@@ -196,7 +202,7 @@ public class RestRequest {
 				Constructor<?> ctor = classe.getConstructor();
 				endPointResolverApi = (EndPointResolverApi) ctor.newInstance();
 			}
-			
+
 			if(endPointResolverApi == null) {
 				endPointResolverApi = new EndPointResolverApi();
 			}
@@ -207,24 +213,25 @@ public class RestRequest {
 			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
 			RestStateHolder.getInstance().getServer().setUrl(uri_server);
 
-			//RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
-			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());				
+			// RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(),
+			// RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));
+			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());
 			// TEST WEIRD, SHOULD BE SET BY THE NOTIFIER.... ????
 			AjxpAPI.getInstance().setServer(RestStateHolder.getInstance().getServer());
 		}
-		
+
 		if(RestStateHolder.getInstance().getSECURE_TOKEN() != null){
 			uri = new URI(uri.toString().concat("&secure_token=" + RestStateHolder.getInstance().getSECURE_TOKEN()));
 		}
-		
+
 		HttpResponse response = null;
 		try {
 			HttpRequestBase request;
 
 			if(postParameters != null || file != null){
 				request = new HttpPost();
-				if(file != null){					
-					
+				if (file != null) {
+
 					if(fileBody == null){
 						if(fileName == null) fileName = file.getName(); 
 						fileBody = new AjxpFileBody(file, fileName);
@@ -242,19 +249,19 @@ public class RestRequest {
 					}
 					MultipartEntity reqEntity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
 					reqEntity.addPart("userfile_0", fileBody);
-					
+
 					if(fileName != null && !EncodingUtils.getAsciiString(EncodingUtils.getBytes(fileName, "US-ASCII")).equals(fileName)){
 						reqEntity.addPart("urlencoded_filename", new StringBody(java.net.URLEncoder.encode(fileName, "UTF-8")));
 					}
 					if(fileBody != null && !fileBody.getFilename().equals(fileBody.getRootFilename())){
 						reqEntity.addPart("appendto_urlencoded_part", new StringBody(java.net.URLEncoder.encode(fileBody.getRootFilename(), "UTF-8")));
 					}
-					if(postParameters != null){						
+					if (postParameters != null) {
 						Iterator<Map.Entry<String, String>> it = postParameters.entrySet().iterator();
 						while(it.hasNext()){
 							Map.Entry<String, String> entry = it.next();
 							reqEntity.addPart(entry.getKey(), new StringBody(entry.getValue()));
-						}						
+						}
 					}
 					if(uploadListener != null){
 						CountingMultipartRequestEntity countingEntity = new CountingMultipartRequestEntity(reqEntity, uploadListener);
@@ -274,15 +281,15 @@ public class RestRequest {
 			}else{
 				request = new HttpGet();
 			}
-			
+
 			request.setURI(uri);
 			if(this.httpUser.length()> 0 && this.httpPassword.length()> 0 ){
 				request.addHeader("Ajxp-Force-Login", "true");
 			}
-			
+
 			response = httpClient.executeInContext(request);
-			
-			if(isAuthenticationRequested(response)){
+
+			if (!skipAuth && isAuthenticationRequested(response)) {
 				sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_REFRESHING_AUTH);
 				this.discardResponse(response);
 				this.authenticate();
@@ -297,8 +304,7 @@ public class RestRequest {
 				this.discardResponse(response);
 				this.issueRequest(originalUri, postParameters, file, fileName, fileBody);
 			}
-				
-			
+
 		} catch (ClientProtocolException e) {
 			error(e);
 		} catch (IOException e) {
@@ -320,19 +326,19 @@ public class RestRequest {
 	public HttpResponse getHttpResponse(URI uri) throws Exception{
 		return this.issueRequest(uri);
 	}
-	
+
 	private void authenticate() throws AuthenticationException{
 		loginStateChanged = false;
 		AjxpAPI API = AjxpAPI.getInstance();
 		try{
 			if(authStep.equals("RENEW-TOKEN")){
-				
+
 				JSONObject jObject = this.getJSonContent(API.getGetSecureTokenUri());
 				RestStateHolder.getInstance().setSECURE_TOKEN(jObject.getString("SECURE_TOKEN"));
 				loginStateChanged = true;
-				
+
 			}else{
-				
+
 				String seed = this.getStringContent(API.getGetLoginSeedUri());
 				if(seed != null) seed = seed.trim();
 				if(seed.indexOf("captcha") > -1){
@@ -342,7 +348,7 @@ public class RestRequest {
 					throw new AuthenticationException(AUTH_ERROR_NOSERVER);
 				}
 				String user = RestStateHolder.getInstance().getServer().getUser();
-				String password = RestStateHolder.getInstance().getServer().getPassword();				
+				String password = RestStateHolder.getInstance().getServer().getPassword();
 				if(!seed.trim().equals("-1")){
 					password = RestRequest.md5(password) + seed;
 					password = RestRequest.md5(password);
@@ -357,24 +363,24 @@ public class RestRequest {
 					if(result.equals("1")){
 						//Log.d("RestRequest Authentication", "LOGGING SUCCEED! REFRESHING TOKEN");
 						String newToken = doc.getElementsByTagName("logging_result").item(0).getAttributes().getNamedItem("secure_token").getNodeValue();
-						RestStateHolder.getInstance().setSECURE_TOKEN(newToken);				
+						RestStateHolder.getInstance().setSECURE_TOKEN(newToken);
 						loginStateChanged = true;
 					}else{
 						//Log.d("RestRequest Authentication", "Login Failed");
 						throw new AuthenticationException(AUTH_ERROR_LOGIN_FAILED);
 					}
 				}
-			
+
 			}
 		}catch(AuthenticationException e){
 			throw e;
 		}catch(Exception e){
 			throw new AuthenticationException(e.getMessage());
-		}			
+		}
 	}
-	
+
 	private boolean isAuthenticationRequested(HttpResponse response) throws Exception {
-		
+
 		Header[] heads = response.getHeaders("Content-type");
 		boolean xml = false;
 		for(int i=0;i<heads.length;i++){
@@ -394,7 +400,7 @@ public class RestRequest {
 				response.setEntity(docEntity);
 				docEntity.toLogger();
 			}
-			
+
 			if(doc.getElementsByTagName("ajxp_registry_part").getLength() > 0
 					&& doc.getDocumentElement().getAttribute("xPath").equals("user/repositories")
 					&& doc.getElementsByTagName("repositories").getLength() == 0){
@@ -420,13 +426,14 @@ public class RestRequest {
 		}catch (Exception e) {
 			error(e);
 			/*
-			sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
-			e.printStackTrace();
-			*/			
+			 * sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR,
+			 * e.getMessage());
+			 * e.printStackTrace();
+			 */
 		}
 		return false;
-	}	
-	
+	}
+
 	public String getStringContent(URI uri) throws Exception {
 		return this.getStringContent(uri, null, null, null);
 	}
@@ -434,7 +441,7 @@ public class RestRequest {
 	public String getStringContent(URI uri, Map<String, String> parameters) throws Exception {
 		return this.getStringContent(uri, parameters, null, null);
 	}
-	
+
 	public String getStringContent(URI uri, Map<String, String> parameters, File file, String fileName) throws Exception {
 		BufferedReader in = null;
 		try {
@@ -445,10 +452,10 @@ public class RestRequest {
 
 			HttpEntity e = response.getEntity();
 			if(e.getClass() == XMLDocEntity.class){
-				
-				Document doc = ((XMLDocEntity)e).getDoc();				
+
+				Document doc = ((XMLDocEntity) e).getDoc();
 				return doc.toString();
-				
+
 			}else{
 				in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 
@@ -464,7 +471,7 @@ public class RestRequest {
 
 				String page = sb.toString();
 
-				return page;				
+				return page;
 			}
 
 		} finally {
@@ -478,22 +485,28 @@ public class RestRequest {
 		}
 	}
 
-	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params, File uploadFile) throws Exception{
-		HttpResponse response = this.issueRequest(uri, params, uploadFile, null, null);
-		
+	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params, File uploadFile, boolean skipAuth) throws Exception {
+		HttpResponse response = this.issueRequest(uri, params, uploadFile, null, null, skipAuth);
+
 		StatusLine status = response.getStatusLine();
 		if(status.getStatusCode() != 200){
 			throw new Exception("Status code :" + status.getStatusCode());
 		}
 		return response.getEntity();
 	}
+
+	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params, File uploadFile) throws Exception {
+		return this.getNotConsumedResponseEntity(uri, params, uploadFile, false);
+	}
+
 	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params) throws Exception{
 		return this.getNotConsumedResponseEntity(uri, params, null);
 	}
-	public Document getDocumentContent(URI uri) throws Exception{		
-		return getDocumentContent(uri, null);		
+
+	public Document getDocumentContent(URI uri) throws Exception {
+		return getDocumentContent(uri, null);
 	}
-	
+
 	public Document getDocumentContent(URI uri, Map<String, String> postParams) throws Exception {
 		if(EndPointResolverApi.checkResolutionRequired(uri)) 
 		{
@@ -501,8 +514,8 @@ public class RestRequest {
 
 			Server server = RestStateHolder.getInstance().getServer();
 			String resolverName = server.getServerNode().getPropertyValue("resolver_class");
-			
-			if(resolverName != null && !resolverName.equals("")) {				
+
+			if (resolverName != null && !resolverName.equals("")) {
 				Class<?> classe = null;
 				try {
 					classe = Class.forName(resolverName);
@@ -512,20 +525,21 @@ public class RestRequest {
 				}
 				Constructor<?> ctor = classe.getConstructor();
 				endPointResolverApi = (EndPointResolverApi) ctor.newInstance();
-			}			
+			}
 			if(endPointResolverApi == null) {
 				endPointResolverApi = new EndPointResolverApi();
-			}			
-			
+			}
+
 			String uri_server = endPointResolverApi.resolveServer(RestStateHolder.getInstance().getServer(), this,uri);
-			
+
 			uri = new URI(uri.toString().replace("RequestResolution", uri_server));
 			RestStateHolder.getInstance().getServer().setUrl(uri_server);
-			//RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(), RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));	
-			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());	
+			// RestStateHolder.getInstance().getServer().setId(Server.slugifyId(RestStateHolder.getInstance().getServer().getUser(),
+			// RestStateHolder.getInstance().getServer().getServerNode().getPropertyValue("server_url")));
+			RestStateHolder.getInstance().notifyServerChanged(RestStateHolder.getInstance().getServer());
 		}
 
-		HttpResponse response = this.issueRequest(uri, postParams);		
+		HttpResponse response = this.issueRequest(uri, postParams);
 		HttpEntity ent = response.getEntity();
 		Document doc;
 		sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_PARSING_RESPONSE);
@@ -536,10 +550,10 @@ public class RestRequest {
 			ent.consumeContent();
 			doc = docEntity.getDoc();
 			response.setEntity(docEntity);
-		}			
+		}
 		return doc;
 	}
-	
+
 	public JSONObject getJSonContent(URI uri) throws Exception {
 		return new JSONObject(this.getStringContent(uri));
 	}
@@ -574,7 +588,7 @@ public class RestRequest {
 			parseDocumentMessage(doc, false);
 		}catch(Exception e){}
 	}
-	
+
 	public void parseDocumentMessage(Document doc, boolean throwOnError) throws Exception{
 		if(doc.getElementsByTagName("message").getLength() > 0){
 			Node node = doc.getElementsByTagName("message").item(0);
@@ -588,10 +602,9 @@ public class RestRequest {
 			}else{
 				sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, message);
 			}
-		}		
+		}
 	}
-	
-	
+
 	public String getHttpUser() {
 		return httpUser;
 	}
@@ -613,7 +626,7 @@ public class RestRequest {
 	public void refreshCredentials(){
 		this.getHttpClient().refreshCredentials(httpUser, httpPassword);
 	}
-	
+
 	/*
 	public void setAuthenticator() {
 		if (httpPassword != null && httpUser != null) {
@@ -669,7 +682,7 @@ public class RestRequest {
 	public synchronized AjxpHttpClient getHttpClient() {
 		return httpClient;
 	}
-	
+
 	public static final String md5(final String s) {
 	    try {
 	        // Create MD5 Hash
@@ -716,6 +729,6 @@ public class RestRequest {
 		if(handler == null) return;
 		handler.sendMessage(messageType, obj);
 	}
-	
+
 
 }
