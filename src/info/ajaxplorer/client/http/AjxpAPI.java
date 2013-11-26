@@ -26,19 +26,26 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.http.cookie.Cookie;
+import org.json.JSONObject;
 import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 public class AjxpAPI {
-
+	
+	
+	
 	String SECURE_TOKEN;
 	String server_url;
 	String content_php = "index.php?";
 	Document xml_registry;
-
+	JSONObject dictionary;
 	private AjxpAPI() {
 		RestStateHolder stateHolder = RestStateHolder.getInstance();
 		if(stateHolder.isServerSet()){
@@ -50,6 +57,7 @@ public class AjxpAPI {
 			}
 		});
 	}
+	
 	private static AjxpAPI instance;
 	public static AjxpAPI getInstance(){
 		if(instance == null) instance = new AjxpAPI();
@@ -60,9 +68,7 @@ public class AjxpAPI {
 		URI uri = null;
 		try {
 			uri = new URI(url);
-			return uri;
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return uri;
 	}
@@ -127,14 +133,14 @@ public class AjxpAPI {
 
 	private String getGetActionUrl(String action, boolean appendRepositoryId) {
 		if(!appendRepositoryId){
-			return this.getAPIUrl().concat("get_action=").concat(action)
-				.concat("&");
+			return this.getAPIUrl().concat("get_action=").concat(action).concat("&");
 		}else{
-			return this.getAPIUrl().concat("get_action=").concat(action)
-					.concat("&tmp_repository_id="+RestStateHolder.getInstance().getRepository().getPropertyValue("repository_id")+"&");			
+			return this.getAPIUrl().concat("get_action=").concat(action).concat("&tmp_repository_id="+RestStateHolder.getInstance().getRepository().getPropertyValue("repository_id")+"&");			
 		}
 	}
-
+	
+	
+	
 	public URI getGetActionUri(String action) throws URISyntaxException{
 		return AjxpAPI.returnUriFromString(this.getGetActionUrl(action));
 	}
@@ -247,7 +253,7 @@ public class AjxpAPI {
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
 			return null;
-		}		
+		}	
 	}
 	
 	public URI getSetRawContentPostUri(String file) throws URISyntaxException{
@@ -315,8 +321,7 @@ public class AjxpAPI {
 				if(thumbDimension != -1){
 					url = url.concat("&dimension="+thumbDimension);
 				}
-			}
-			
+			}			
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
@@ -395,7 +400,6 @@ public class AjxpAPI {
 			}
 			return returnUriFromString(url);
 		}catch(UnsupportedEncodingException e){
-			e.printStackTrace();
 			return null;
 		}
 	}
@@ -454,9 +458,6 @@ public class AjxpAPI {
 			return null;
 		}
 	}
-	
-		
-	
 	public URI getFilehashDeltaUri(Node node)throws URISyntaxException {
 		
 		String url=getGetActionUrl("filehasher_delta");
@@ -470,10 +471,6 @@ public class AjxpAPI {
 		
 		
 	}
-	
-
-	
-	
 	public URI getFilehashSignatureUri(Node node)throws URISyntaxException {
 		
 		String url=getGetActionUrl("filehasher_signature");
@@ -486,8 +483,7 @@ public class AjxpAPI {
 		}
 		
 		
-	}
-	
+	}	
 	public URI getFilehashPatchUri(Node node)throws URISyntaxException {
 		
 		String url=getGetActionUrl("filehasher_patch");
@@ -497,9 +493,11 @@ public class AjxpAPI {
 		}catch(UnsupportedEncodingException e){
 			e.printStackTrace();
 			return null;
-		}
-		
+		}	
 		
 	}
+	
+	
+	
 	
 }
