@@ -20,10 +20,13 @@ package info.ajaxplorer.client.model;
 
 import java.io.Serializable;
 
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
+
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName="b")
+@IgnoreSizeOf
 public class Property implements Serializable {
 
 	@DatabaseField(generatedId=true)

@@ -25,6 +25,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.UUID;
 
+import net.sf.ehcache.pool.sizeof.annotations.IgnoreSizeOf;
+
 import org.apache.http.util.EncodingUtils;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
@@ -38,6 +40,7 @@ import com.j256.ormlite.field.ForeignCollectionField;
 import com.j256.ormlite.table.DatabaseTable;
 
 @DatabaseTable(tableName="a")
+@IgnoreSizeOf
 public class Node implements Serializable {
 
 	public static int NODE_STATUS_FRESH = 1; 
