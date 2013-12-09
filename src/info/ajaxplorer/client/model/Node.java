@@ -79,7 +79,7 @@ public class Node implements Serializable {
 	@DatabaseField(foreign = true, index=true)//, columnDefinition="INTEGER REFERENCES `node`(`id`) ON DELETE CASCADE")
 	Node parent;
 	
-	Node(){
+	public Node(){
 		
 	}
 	

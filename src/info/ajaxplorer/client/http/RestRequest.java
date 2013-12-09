@@ -28,6 +28,7 @@ import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -113,31 +114,37 @@ public class RestRequest {
 		RestStateHolder state = RestStateHolder.getInstance();
 		internalListener = new RestStateHolder.ServerStateListener() {
 			public void onServerChange(Server newServer, Server oldServer) {
-				initWithServer(newServer);
+				
+				// we clear cookies if newServer and OldServer have the same host names (aliases) but different users credentials.
+				
+				initWithServer(newServer);				
 				if(oldServer != null && AjxpHttpClient.cookieStore != null){
+					
 					String currentHost = oldServer.getHost();
-					String currentUser = oldServer.getUser();
-
-					Server serv =  RestStateHolder.getInstance().getServer();
-
-					if(serv != null ){
-						if(serv.getUri() != null && serv.getUri().toString() != null && !serv.getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION)) {
-						    if(newServer != null && newServer.getHost().equals(currentHost) && !newServer.getUser().equals(currentUser)){
-								AjxpHttpClient.cookieStore.clear();
-						    }
-						    return;
-						}
-
-						String oldAlias = oldServer.getServerNode().getPropertyValue("Resolution_Alias");
-						String newAlias = newServer.getServerNode().getPropertyValue("Resolution_Alias");
-
-						if(newAlias == null) newAlias = "new";
-						if(oldAlias == null) oldAlias = "old";
-
-						if(serv.getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION) && !newAlias.equals(oldAlias)) {
-							AjxpHttpClient.cookieStore.clear();
-						}
+					String currentUser = oldServer.getUser();					
+					
+					if(newServer.getUri() != null && newServer.getUri().toString() != null && !newServer.getUri().toString().contains(EndPointResolverApi.SERVER_URL_RESOLUTION)) {
+					    if(newServer.getHost().equals(currentHost) && !newServer.getUser().equals(currentUser)){
+					    	AjxpHttpClient.cookieStore.clear();						    	
+					    }
+					    return;
 					}
+					
+					String oldAlias = null;
+					String newAlias = null;
+					try{		
+						oldAlias = oldServer.getServerNode().getPropertyValue("Resolution_Alias");
+						newAlias = newServer.getServerNode().getPropertyValue("Resolution_Alias");
+					}catch(Exception e){}
+					
+					if(newAlias == null || oldAlias == null){
+						return;
+					}
+					
+					String serverURI = newServer.getUri().toString();
+					if(serverURI != null && serverURI.contains(EndPointResolverApi.SERVER_URL_RESOLUTION) && !newAlias.equals(oldAlias)) {
+						AjxpHttpClient.cookieStore.clear();
+					}					
 				}
 			}
 		};
@@ -439,6 +446,10 @@ public class RestRequest {
 	public String getStringContent(URI uri) throws Exception {
 		return this.getStringContent(uri, null, null, null);
 	}
+	
+	public String getContentString(URI uri, Map<String, String> map) throws Exception{
+		return this.getStringContent(uri, map, null, null);
+	}
 
 	public String getStringContent(URI uri, Map<String, String> parameters) throws Exception {
 		return this.getStringContent(uri, parameters, null, null);
@@ -454,8 +465,8 @@ public class RestRequest {
 
 			HttpEntity e = response.getEntity();
 			if(e.getClass() == XMLDocEntity.class){
-
-				Document doc = ((XMLDocEntity) e).getDoc();
+				
+				Document doc = ((XMLDocEntity)e).getDoc();			
 				return doc.toString();
 
 			}else{
@@ -559,7 +570,9 @@ public class RestRequest {
 	public JSONObject getJSonContent(URI uri) throws Exception {
 		return new JSONObject(this.getStringContent(uri));
 	}
-
+	public JSONObject getJSonContent(URI uri, Map<String, String> parameters) throws ParseException, Exception {
+		return new JSONObject(this.getStringContent(uri, parameters, null, null));		
+	}
 	/**
 	 * @param uri
 	 *            Target uri that might require http basic auth
@@ -660,7 +673,6 @@ public class RestRequest {
 			e.printStackTrace();
 			return -1;
 		}
-
 	}
 
 	public void discardResponse(HttpResponse response) {
