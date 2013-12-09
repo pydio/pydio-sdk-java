@@ -36,6 +36,9 @@ public class AjxpFileBody extends FileBody {
 	private int totalChunks;
 	private int lastChunkSize;
 	
+	// default upload chunk size;
+	private int uploadChunkSize = RestStateHolder.FILE_UPLOAD_CHUNK_1K;
+
 	public AjxpFileBody(File file, String fileName) {
 		super(file);
 		customFileName = fileName;
@@ -109,13 +112,15 @@ public class AjxpFileBody extends FileBody {
 				raf.close();
 				//System.out.println("Sent " + count);				
 			}else{
+				long time = System.currentTimeMillis();
 				in = new FileInputStream(getFile());
-				byte[] buf = new byte[1024];
+				byte[] buf = new byte[uploadChunkSize];
 				int len;
 				while ((len = in.read(buf)) > 0){
 					out.write(buf, 0, len);
 				}
 				in.close();
+				System.out.println("Chunk size: " + uploadChunkSize + " - time for upload: " + (System.currentTimeMillis() - time));
 			}
 			this.chunkIndex++;
 		} catch (FileNotFoundException e) {
@@ -123,6 +128,10 @@ public class AjxpFileBody extends FileBody {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} 
+	}
+
+	public void setUploadChunkSize(int uploadChunkSize) {
+		this.uploadChunkSize = uploadChunkSize;
 	}
 			
 }

@@ -235,6 +235,8 @@ public class RestRequest {
 					if(fileBody == null){
 						if(fileName == null) fileName = file.getName(); 
 						fileBody = new AjxpFileBody(file, fileName);
+						// set upload chunk size
+						fileBody.setUploadChunkSize(RestStateHolder.getInstance().getFileUploadChunkSize());
 						long maxUpload = getMaxUploadSize();
 						if(maxUpload > 0 && maxUpload < file.length()){
 							fileBody.chunkIntoPieces((int)maxUpload);

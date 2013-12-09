@@ -18,13 +18,17 @@
  */
 package info.ajaxplorer.client.http;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
 import info.ajaxplorer.client.model.Node;
 import info.ajaxplorer.client.model.Server;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 public class RestStateHolder {
+
+	public static final int FILE_UPLOAD_CHUNK_1K = 1024;
+	public static final int FILE_UPLOAD_CHUNK_8K = 1024 * 8;
+	public static final int FILE_UPLOAD_CHUNK_16K = 1024 * 16;
 
 	private static RestStateHolder instance;
 	
@@ -32,6 +36,9 @@ public class RestStateHolder {
 	private Node repository;
 	private Node directory;
 	private String SECURE_TOKEN;
+
+	// upload file chunk size
+	private int fileUploadChunkSize = FILE_UPLOAD_CHUNK_1K;
 
 	private ArrayList<StateListener> listeners = new ArrayList<RestStateHolder.StateListener>();
 	
@@ -160,5 +167,17 @@ public class RestStateHolder {
 		
 	}
 	
+	/**
+	 * Sets chunk size for AjxpFileBody during upload
+	 * 
+	 * @param fileUploadChunkSize
+	 */
+	public void setFileUploadChunkSize(int fileUploadChunkSize) {
+		this.fileUploadChunkSize = fileUploadChunkSize;
+	}
 	
+	public int getFileUploadChunkSize() {
+		return fileUploadChunkSize;
+	}
+
 }
