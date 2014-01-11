@@ -206,12 +206,12 @@ public class AjxpAPI {
 						+ java.net.URLEncoder.encode(path, "UTF-8") + "&recursive=true";
 				
 				// add max_depth and max_nodes params
-				String maxDepth = directory.getPropertyValue(Node.MAX_DEPTH);
-				String maxNodes = directory.getPropertyValue(Node.MAX_NODES);
-				if (maxDepth != null) {
+				int maxDepth = directory.getMaxDepth();
+				int maxNodes = directory.getMaxNodes();
+				if (maxDepth != -1) {
 					url += "&" + Node.MAX_DEPTH + "=" + maxDepth;
 				}
-				if (maxNodes != null) {
+				if (maxNodes != -1) {
 					url += "&" + Node.MAX_NODES + "=" + maxNodes;
 				}
 				
