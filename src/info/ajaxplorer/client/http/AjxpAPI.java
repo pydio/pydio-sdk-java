@@ -204,6 +204,18 @@ public class AjxpAPI {
 			if(recursive){
 				url = getGetActionUrl("ls") + "options=a&dir="
 						+ java.net.URLEncoder.encode(path, "UTF-8") + "&recursive=true";
+				
+				// add max_depth and max_nodes params
+				int maxDepth = directory.getMaxDepth();
+				int maxNodes = directory.getMaxNodes();
+				if (maxDepth != -1) {
+					url += "&" + Node.MAX_DEPTH + "=" + maxDepth;
+				}
+				if (maxNodes != -1) {
+					url += "&" + Node.MAX_NODES + "=" + maxNodes;
+				}
+				
+				System.out.println("URL: " + url);
 			}else{
 				url = getGetActionUrl("ls") + "options=al&dir="
 						+ java.net.URLEncoder.encode(path, "UTF-8");				
