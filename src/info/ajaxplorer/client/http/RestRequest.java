@@ -295,7 +295,7 @@ public class RestRequest {
 			if(this.httpUser.length()> 0 && this.httpPassword.length()> 0 ){
 				request.addHeader("Ajxp-Force-Login", "true");
 			}
-
+			
 			response = httpClient.executeInContext(request);
 
 			if (!skipAuth && isAuthenticationRequested(response)) {
@@ -456,18 +456,23 @@ public class RestRequest {
 	}
 
 	public String getStringContent(URI uri, Map<String, String> parameters, File file, String fileName) throws Exception {
+		return this.getStringContent(uri, parameters, file, fileName, -1);
+	}
+
+	public String getStringContent(URI uri, Map<String, String> parameters, File file, String fileName, int checkStatusCode) throws Exception {
 		BufferedReader in = null;
 		try {
 			HttpResponse response = this.issueRequest(uri, parameters, file, fileName, null);
 			if(response == null){
 				throw new Exception("Empty Http response");
-			}
+			}			
 
 			HttpEntity e = response.getEntity();
+			String content;
 			if(e.getClass() == XMLDocEntity.class){
 				
 				Document doc = ((XMLDocEntity)e).getDoc();			
-				return doc.toString();
+				content = doc.toString();
 
 			}else{
 				in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
@@ -482,10 +487,13 @@ public class RestRequest {
 
 				in.close();
 
-				String page = sb.toString();
-
-				return page;
+				content = sb.toString();
 			}
+			
+			if(checkStatusCode != -1 && response.getStatusLine().getStatusCode() != checkStatusCode){
+				throw new Exception("Wrong status code ("+response.getStatusLine().getStatusCode()+", expected "+checkStatusCode+"). Response was :" + content);
+			}	
+			return content;
 
 		} finally {
 			if (in != null) {
@@ -497,7 +505,7 @@ public class RestRequest {
 			}
 		}
 	}
-
+	
 	public HttpEntity getNotConsumedResponseEntity(URI uri, Map<String, String> params, File uploadFile, boolean skipAuth) throws Exception {
 		HttpResponse response = this.issueRequest(uri, params, uploadFile, null, null, skipAuth);
 
