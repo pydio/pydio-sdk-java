@@ -39,6 +39,8 @@ public class AjxpFileBody extends FileBody {
 	// default upload chunk size;
 	private int uploadChunkSize = RestStateHolder.FILE_UPLOAD_CHUNK_1K;
 
+	private MessageListener messageListener;
+
 	public AjxpFileBody(File file, String fileName) {
 		super(file);
 		customFileName = fileName;
@@ -59,6 +61,9 @@ public class AjxpFileBody extends FileBody {
 		return this.totalChunks;
 	}
 	public void resetChunkIndex(){
+		if (messageListener != null) {
+			messageListener.log("AjxpFileBody - Resetting Chunk Size");
+		}
 		chunkIndex = 0;
 	}
 	public boolean isChunked(){
@@ -104,12 +109,24 @@ public class AjxpFileBody extends FileBody {
 					limit = lastChunkSize;
 				}
 				raf.seek(start);
+				byte[] buf = new byte[uploadChunkSize];
 				while(count < limit){
-					int byt =raf.read();
-					out.write(byt);
-					count++;
+					int len = raf.read(buf);
+					// fix the length if
+					if (limit - count < len) {
+						len = limit - count;
+					}
+					out.write(buf, 0, len);
+					count += len;
 				}					
 				raf.close();
+
+				if (messageListener != null) {
+					messageListener.log("AjxpFileBody - Writing another chunk of file: " + this.getFile().getPath() + " STATE: start="
+							+ start + " limit="
+							+ limit + " chunkIndex=" + chunkIndex);
+				}
+
 				//System.out.println("Sent " + count);				
 			}else{
 				long time = System.currentTimeMillis();
@@ -120,7 +137,9 @@ public class AjxpFileBody extends FileBody {
 					out.write(buf, 0, len);
 				}
 				in.close();
-				System.out.println("Chunk size: " + uploadChunkSize + " - time for upload: " + (System.currentTimeMillis() - time));
+				if (messageListener != null) {
+					messageListener.log("Chunk size: " + uploadChunkSize + " - time for upload: " + (System.currentTimeMillis() - time));
+				}
 			}
 			this.chunkIndex++;
 		} catch (FileNotFoundException e) {
@@ -132,6 +151,10 @@ public class AjxpFileBody extends FileBody {
 
 	public void setUploadChunkSize(int uploadChunkSize) {
 		this.uploadChunkSize = uploadChunkSize;
+	}
+
+	public void setMessageListener(MessageListener messageListener) {
+		this.messageListener = messageListener;
 	}
 			
 }

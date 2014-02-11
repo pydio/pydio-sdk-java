@@ -29,6 +29,8 @@ public interface MessageListener {
 	
 	public void sendMessage(int what, Object obj);	
 	
+	public void log(String message);
+
 	public void requireInterrupt();
 	public boolean isInterruptRequired();
 	

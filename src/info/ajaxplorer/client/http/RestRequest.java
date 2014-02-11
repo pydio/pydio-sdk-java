@@ -242,6 +242,7 @@ public class RestRequest {
 					if(fileBody == null){
 						if(fileName == null) fileName = file.getName(); 
 						fileBody = new AjxpFileBody(file, fileName);
+						fileBody.setMessageListener(handler);
 						// set upload chunk size
 						fileBody.setUploadChunkSize(RestStateHolder.getInstance().getFileUploadChunkSize());
 						long maxUpload = getMaxUploadSize();
@@ -306,6 +307,14 @@ public class RestRequest {
 					// RELOAD
 					loginStateChanged = false;
 					sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_LOADING_DATA);
+
+					sendLogToHandler("RestRequest - About to send request again to server - STATE: skipAuth="
+							+ skipAuth
+							+ " authenticationRequested="
+							// + authenticationRequested
+							+ (fileBody != null ? (" fileBody-chunks=" + fileBody.getTotalChunks() + " fileBody-currentChunk=" + fileBody
+									.getCurrentIndex()) : " fileBody=null"));
+
 					if(fileBody != null) fileBody.resetChunkIndex();
 					return this.issueRequest(originalUri, postParameters, file, fileName, fileBody);
 				}
@@ -744,5 +753,10 @@ public class RestRequest {
 		handler.sendMessage(messageType, obj);
 	}
 
+	protected void sendLogToHandler(String message) {
+		if (handler == null)
+			return;
+		handler.log(message);
+	}
 
 }
