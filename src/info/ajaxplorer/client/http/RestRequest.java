@@ -247,8 +247,8 @@ public class RestRequest {
 						fileBody.setUploadChunkSize(RestStateHolder.getInstance().getFileUploadChunkSize());
 						long maxUpload = getMaxUploadSize();
 						if(maxUpload > 0 && maxUpload < file.length()){
-							fileBody.chunkIntoPieces((int)maxUpload);
-							if(uploadListener != null){
+							fileBody.chunkIntoPieces((int) maxUpload);
+							if (uploadListener != null) {
 								uploadListener.partTransferred(fileBody.getCurrentIndex(), fileBody.getTotalChunks());
 							}
 						}

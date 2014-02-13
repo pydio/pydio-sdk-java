@@ -118,6 +118,10 @@ public class AjxpFileBody extends FileBody {
 					}
 					out.write(buf, 0, len);
 					count += len;
+					if (messageListener != null) {
+						messageListener.log("AjxpFileBody - Writing file: limit=" + limit + " count=" + count);
+					}
+
 				}					
 				raf.close();
 
