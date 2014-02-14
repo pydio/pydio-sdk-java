@@ -29,6 +29,8 @@ public class RestStateHolder {
 	public static final int FILE_UPLOAD_CHUNK_1K = 1024;
 	public static final int FILE_UPLOAD_CHUNK_8K = 1024 * 8;
 	public static final int FILE_UPLOAD_CHUNK_16K = 1024 * 16;
+	public static final int FILE_UPLOAD_CHUNK_1M = 1024 * 1024 * 1;
+	public static final int FILE_UPLOAD_CHUNK_5M = 1024 * 1024 * 5;
 
 	private static RestStateHolder instance;
 	
@@ -39,6 +41,9 @@ public class RestStateHolder {
 
 	// upload file chunk size
 	private int fileUploadChunkSize = FILE_UPLOAD_CHUNK_1K;
+
+	// upload file chunk size for big file
+	private int fileUploadChunkSizeBigFile = FILE_UPLOAD_CHUNK_16K;
 
 	private ArrayList<StateListener> listeners = new ArrayList<RestStateHolder.StateListener>();
 	
@@ -181,6 +186,14 @@ public class RestStateHolder {
 	
 	public int getFileUploadChunkSize() {
 		return fileUploadChunkSize;
+	}
+
+	public int getFileUploadChunkSizeBigFile() {
+		return fileUploadChunkSizeBigFile;
+	}
+
+	public void setFileUploadChunkSizeBigFile(int fileUploadChunkSizeBigFile) {
+		this.fileUploadChunkSizeBigFile = fileUploadChunkSizeBigFile;
 	}
 
 }

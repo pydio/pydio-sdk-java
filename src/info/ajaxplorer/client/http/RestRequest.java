@@ -153,6 +153,7 @@ public class RestRequest {
 	}
 
 	public void release(){
+		uploadListener = null;
 		RestStateHolder.getInstance().unRegisterStateListener(internalListener);
 	}
 
@@ -245,6 +246,7 @@ public class RestRequest {
 						fileBody.setMessageListener(handler);
 						// set upload chunk size
 						fileBody.setUploadChunkSize(RestStateHolder.getInstance().getFileUploadChunkSize());
+						fileBody.setUploadChunkSizeBigFile(RestStateHolder.getInstance().getFileUploadChunkSizeBigFile());
 						long maxUpload = getMaxUploadSize();
 						if(maxUpload > 0 && maxUpload < file.length()){
 							fileBody.chunkIntoPieces((int) maxUpload);
@@ -299,7 +301,13 @@ public class RestRequest {
 			
 			response = httpClient.executeInContext(request);
 
-			if (!skipAuth && isAuthenticationRequested(response)) {
+			boolean authenticationRequested = false;
+			if (!skipAuth) {
+				// we can query for authenitcation only when not skipped auth...
+				// anyway we got no Content in response!
+				authenticationRequested = isAuthenticationRequested(response);
+			}
+			if (!skipAuth && authenticationRequested) {
 				sendMessageToHandler(MessageListener.MESSAGE_WHAT_STATE, STATUS_REFRESHING_AUTH);
 				this.discardResponse(response);
 				this.authenticate();
@@ -311,7 +319,7 @@ public class RestRequest {
 					sendLogToHandler("RestRequest - About to send request again to server - STATE: skipAuth="
 							+ skipAuth
 							+ " authenticationRequested="
-							// + authenticationRequested
+							+ authenticationRequested
 							+ (fileBody != null ? (" fileBody-chunks=" + fileBody.getTotalChunks() + " fileBody-currentChunk=" + fileBody
 									.getCurrentIndex()) : " fileBody=null"));
 
@@ -336,7 +344,6 @@ public class RestRequest {
 		    sendMessageToHandler(MessageListener.MESSAGE_WHAT_ERROR, e.getMessage());
 			e.printStackTrace();
 		}finally{
-			uploadListener = null;
 		}
 		return response;
 	}

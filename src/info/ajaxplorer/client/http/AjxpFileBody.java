@@ -39,6 +39,9 @@ public class AjxpFileBody extends FileBody {
 	// default upload chunk size;
 	private int uploadChunkSize = RestStateHolder.FILE_UPLOAD_CHUNK_1K;
 
+	// default upload chunk size for big file
+	private int uploadChunkSizeBigFile = RestStateHolder.FILE_UPLOAD_CHUNK_16K;
+
 	private MessageListener messageListener;
 
 	public AjxpFileBody(File file, String fileName) {
@@ -109,7 +112,10 @@ public class AjxpFileBody extends FileBody {
 					limit = lastChunkSize;
 				}
 				raf.seek(start);
-				byte[] buf = new byte[uploadChunkSize];
+
+				long time = System.currentTimeMillis();
+
+				byte[] buf = new byte[uploadChunkSizeBigFile];
 				while(count < limit){
 					int len = raf.read(buf);
 					// fix the length if
@@ -119,7 +125,8 @@ public class AjxpFileBody extends FileBody {
 					out.write(buf, 0, len);
 					count += len;
 					if (messageListener != null) {
-						messageListener.log("AjxpFileBody - Writing file: limit=" + limit + " count=" + count);
+						messageListener.log("AjxpFileBody - Writing file: limit=" + limit + " count=" + count + " time: "
+								+ ((System.currentTimeMillis() - time)) / 1000d + " chunkSize = " + uploadChunkSizeBigFile);
 					}
 
 				}					
@@ -155,6 +162,10 @@ public class AjxpFileBody extends FileBody {
 
 	public void setUploadChunkSize(int uploadChunkSize) {
 		this.uploadChunkSize = uploadChunkSize;
+	}
+
+	public void setUploadChunkSizeBigFile(int uploadChunkSizeBigFile) {
+		this.uploadChunkSizeBigFile = uploadChunkSizeBigFile;
 	}
 
 	public void setMessageListener(MessageListener messageListener) {
